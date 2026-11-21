@@ -3,12 +3,12 @@
 A piece goes in the file when it is:
   - Available (not reserved or sold),
   - not ticked "Listed on eBay" in Pages CMS,
-  - no longer than max_length_m (1.2m), with a length, a width and at least one photo.
+  - has a length, a width and at least one photo.
 
 Postage is set by size, using postage policies saved in the eBay account:
   - up to 80cm long and 40cm wide   -> small_policy  (£5)
   - up to 1.2m long and 50cm wide   -> medium_policy (£10)
-  - anything wider                  -> collection_policy (collection only)
+  - anything longer or wider        -> collection_policy (collection only)
 Settings live in _data/ebay.yml (editable in Pages CMS).
 """
 import csv
@@ -30,8 +30,17 @@ PALE = {"Maple", "Ash", "Sycamore", "Hornbeam", "Poplar", "Beech", "Birch"}
 EXTRA_COLUMNS = ["ShippingProfileName", "PostalCode"]
 
 
+DEFAULTS = {
+    "site_url": "https://jrctimber.co.uk", "location": "Great Wigborough, Colchester", "postcode": "CO5 7RP",
+    "dispatch_days": 3, "small_max_length_m": 0.8, "small_max_width_mm": 400, "small_policy": "JRC £5 postage",
+    "medium_max_length_m": 1.2, "medium_max_width_mm": 500, "medium_policy": "JRC £10 postage",
+    "collection_policy": "JRC collection only",
+}
+
+
 def load_settings():
-    return yaml.safe_load(SETTINGS.read_text(encoding="utf-8")) or {}
+    s = yaml.safe_load(SETTINGS.read_text(encoding="utf-8")) or {}
+    return {**DEFAULTS, **{k: v for k, v in s.items() if v not in (None, "")}}
 
 
 def num(v):
@@ -55,10 +64,8 @@ def why_not(d, s):
         return None  # already listed
     if length is None:
         return "needs a length"
-    if length > float(s.get("max_length_m", 1.2)):
-        return None  # too long for eBay, site only
     if width is None:
-        return "needs a width (for postage)"
+        return "needs a width"
     if not d.get("photos"):
         return "needs at least one photo"
     return ""
@@ -190,7 +197,7 @@ def write_page(lines, waiting):
         return f"<tr><td class='nw'>{html.escape(d['ref'])}</td><td>{html.escape(d['name'])}</td><td class='nw'>£{fmt(num(d['price']))}</td><td>{html.escape(extra)}</td></tr>"
     ready = "".join(li(d, label) for d, label in lines) or "<tr><td colspan='4'>Nothing new to list right now.</td></tr>"
     todo = "".join(li(d, why) for d, why in waiting)
-    todo_block = f"<h2>Not in the file yet</h2><p>These could go on eBay once they have a bit more detail in the stock manager. Pieces over 1.2m long stay on the website only.</p><div class='scroll'><table class='eb'><tr><th>No.</th><th>Piece</th><th>Price</th><th>Needs</th></tr>{todo}</table></div>" if todo else ""
+    todo_block = f"<h2>Not in the file yet</h2><p>These can go on eBay once they have a bit more detail in the stock manager:</p><div class='scroll'><table class='eb'><tr><th>No.</th><th>Piece</th><th>Price</th><th>Needs</th></tr>{todo}</table></div>" if todo else ""
     OUT_PAGE.write_text(f"""<!DOCTYPE html>
 <html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex"><title>eBay Upload</title><link rel="icon" href="favicon.png">
@@ -200,7 +207,7 @@ def write_page(lines, waiting):
 </head><body>
 <main class="band">
 <h1>eBay upload</h1>
-<p style="margin:12px 0 20px;color:var(--muted)">Available pieces up to 1.2m long that aren't ticked "Listed on eBay". This page updates every time you save in the stock manager.</p>
+<p style="margin:12px 0 20px;color:var(--muted)">Available pieces that aren't ticked "Listed on eBay". Up to 80 × 40cm: £5 postage. Up to 1.2m × 50cm: £10 postage. Anything bigger: collection only. This page updates every time you save in the stock manager.</p>
 <a class="btn btn-dark" href="ebay.csv" download>Download eBay file ({len(lines)} piece{'s' if len(lines) != 1 else ''})</a>
 <h2>In the file</h2>
 <div class="scroll"><table class="eb"><tr><th>No.</th><th>Piece</th><th>Price</th><th>Postage</th></tr>{ready}</table></div>

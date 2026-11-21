@@ -3,7 +3,6 @@ site_url: https://jrctimber.github.io
 location: Great Wigborough, Colchester
 postcode: CO5 7RP
 dispatch_days: 3
-max_length_m: 1.2
 small_max_length_m: 0.8
 small_max_width_mm: 400
 small_policy: JRC £5 postage

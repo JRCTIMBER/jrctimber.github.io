@@ -106,7 +106,7 @@ content:
       - name: ebay
         label: Listed on eBay
         type: boolean
-        description: Tick once it's been uploaded to eBay. Unticked pieces up to 1.2m long go in the eBay file automatically (see jrctimber.github.io/ebay.html).
+        description: Tick once it's been uploaded to eBay. Unticked pieces go in the eBay file automatically (see jrctimber.github.io/ebay.html). Over 1.2m long or 50cm wide is listed as collection only.
 
   - name: ebay-settings
     label: eBay settings
@@ -124,9 +124,6 @@ content:
         type: string
       - name: dispatch_days
         label: Dispatch time (days)
-        type: number
-      - name: max_length_m
-        label: Longest piece to list on eBay (m)
         type: number
       - name: small_max_length_m
         label: Small parcel - max length (m)
