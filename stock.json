@@ -382,23 +382,5 @@
   "status": "Available",
   "note": null,
   "photos": []
- },
- {
-  "ref": "JRC-025",
-  "name": "TEST piece - please ignore",
-  "wood": "Oak",
-  "length": 2.1,
-  "width": 480,
-  "width_min": null,
-  "thickness": 50,
-  "dried": "Air dried",
-  "finish": "Rough sawn",
-  "price": 1,
-  "was": null,
-  "status": "Available",
-  "note": null,
-  "photos": [
-   "/img/stock/zz-test-photo.jpg"
-  ]
  }
 ]
