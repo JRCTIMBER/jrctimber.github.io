@@ -1,10 +1,13 @@
 name: Update site
 
-# Runs after every change (including saves from Pages CMS) and when the
-# "Sold or reserved a piece" button is used in Pages CMS.
+# Runs after every change (including saves from Pages CMS), when the
+# "Sold or reserved a piece" button is used in Pages CMS, and every 15 minutes
+# to pick up pieces paid for online (Stripe). Scheduled runs only republish if something changed.
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
     inputs:
       payload:
@@ -24,6 +27,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.save.outputs.publish }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,35 +39,49 @@ jobs:
           python-version: "3.12"
 
       - name: Install tools
-        run: pip install pillow pyyaml
+        run: pip install pillow pyyaml requests
 
       - name: Stock numbers, sold pieces and photos
         env:
           PAYLOAD: ${{ inputs.payload }}
+          STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
         run: python scripts/process_stock.py
 
       - name: Save changes
+        id: save
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A _stock img/stock .stock-counter .stock-index.json stock.json ebay.csv ebay.html
-          if ! git diff --cached --quiet; then
-            git commit -m "Update stock numbers and photos"
+          git add -A _stock img/stock stock .stock-counter .stock-index.json .stripe-links.json stock.json google-products.xml delivery.html ebay.csv ebay.html
+          if git diff --cached --quiet; then
+            changed=false
+          else
+            changed=true
+            git commit -m "Update stock"
             git pull --rebase origin main
             git push origin HEAD:main
           fi
+          if [ "${{ github.event_name }}" != "schedule" ] || [ "$changed" = "true" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - uses: actions/configure-pages@v5
+      - if: steps.save.outputs.publish == 'true'
+        uses: actions/configure-pages@v5
 
-      - uses: actions/jekyll-build-pages@v1
+      - if: steps.save.outputs.publish == 'true'
+        uses: actions/jekyll-build-pages@v1
         with:
           source: ./
           destination: ./_site
 
-      - uses: actions/upload-pages-artifact@v3
+      - if: steps.save.outputs.publish == 'true'
+        uses: actions/upload-pages-artifact@v3
 
   deploy:
     needs: build
+    if: needs.build.outputs.publish == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

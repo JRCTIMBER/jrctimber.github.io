@@ -53,6 +53,30 @@ editable in Pages CMS under **eBay settings**):
 Upload the file in eBay **Seller Hub → Reports → Uploads**, then tick **Listed on eBay** on those pieces.
 Photo links use `site_url` in the eBay settings: change it to `https://jrctimber.co.uk` once the domain is switched.
 
+## Buying online (Stripe) and Google Shopping
+
+Each piece has its own page at `stock/jrc-025.html` (made automatically) with photos, details, **Buy now**,
+Reserve on WhatsApp, and Google product data (schema.org Product).
+
+**Buy now** appears for available pieces that have a photo, a length and a width, once a Stripe key is added:
+- Each piece gets its own Stripe payment link that stops after **one payment**, so it can't be sold twice online.
+- Postage at checkout follows the size bands (£5, £10, collection) plus free collection.
+- Links are turned off automatically when a piece is reserved, sold, removed, or its price or size changes
+  (a new link is made for the new price).
+- Every 15 minutes the automation checks Stripe for completed payments and marks those pieces **Sold**.
+  Stripe emails you the order with the buyer's address and postage choice.
+- Links are recorded in `.stripe-links.json`.
+
+To turn it on: in Stripe create a **restricted key** with Write access to Products, Prices, Shipping Rates and
+Payment Links, and Read access to Checkout Sessions. Add it in GitHub under
+Settings → Secrets and variables → Actions as `STRIPE_KEY`. Use a test key (`rk_test_…`) first, then a live key.
+
+**Google Shopping:** `google-products.xml` lists available pieces with Buy now, a photo and £5/£10 delivery.
+Add `https://jrctimber.co.uk/google-products.xml` in Google Merchant Center as a scheduled-fetch product source.
+Collection-only pieces aren't in the feed (Google needs a delivery price) but still get their own page.
+
+**Delivery & returns** (`delivery.html`) is made from the eBay settings so the sizes and prices always match.
+
 ## Common edits
 
 - **Services:** in `index.html`, find `const services = [` and edit the name or description. The optional fifth item is the max size, e.g. `"Slabs up to 1.2m wide × 3m long"`.

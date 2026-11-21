@@ -64,14 +64,8 @@
     </div>
     <p class="note" id="count">Loading stock…</p>
     <ul class="items" id="items"></ul>
-    <dialog id="pv" aria-labelledby="pv-t">
-      <div class="pv-bar"><span id="pv-t"></span><form method="dialog"><button>Close</button></form></div>
-      <img id="pv-img" alt="">
-      <div class="pv-nav"><button type="button" id="pv-prev" aria-label="Previous photo">‹</button><span id="pv-n"></span><button type="button" id="pv-next" aria-label="Next photo">›</button></div>
-    </dialog>
-
     <div class="info">
-      <div><b>Reserve a piece</b><p>Tap Reserve and the piece number is added to your WhatsApp message for you. We can send more photos and measurements.</p></div>
+      <div><b>Buy or reserve</b><p>Pay securely online with Buy now, or tap WhatsApp to reserve. Tap any piece for more photos and details.</p></div>
       <div><b>Delivery &amp; shipping</b><p>We deliver, and smaller pieces can be shipped. Tell us where you are and we'll give you a price.</p></div>
       <div><b>Collect from the yard</b><p>Layer Road, Great Wigborough, Colchester CO5 7RP. Visits by appointment, 7 days a week.</p></div>
       <div><b>Flattened, planed or cut</b><p>We can CNC flatten, plane or cut a piece to size before you collect it, or make it into a table. <a href="index.html#faq">Questions? See our FAQ</a>.</p></div>
@@ -90,6 +84,7 @@
       <a href="https://www.instagram.com/jrctimber/" target="_blank" rel="noopener">Instagram</a>
       <a href="https://www.facebook.com/JRCTimber/" target="_blank" rel="noopener">Facebook</a>
       <a href="index.html#faq">FAQ</a>
+      <a href="delivery.html">Delivery &amp; returns</a>
       <span>© <span id="yr">2026</span> JRC Timber</span>
     </div>
   </div>
@@ -175,23 +170,24 @@
       const sold = p.status === "sold", reserved = p.status === "reserved";
       const tag = sold ? '<span class="tag sold">Sold</span>' : reserved ? '<span class="tag">Reserved</span>' : p.was ? '<span class="tag">Reduced</span>' : "";
       const ph = p.photos || [];
-      const pic = ph.length
-        ? `<button type="button" class="zoom" data-i="${p.i}" aria-label="View photos of ${esc(p.name)}"><img src="${esc(thumb(ph[0]))}" data-full="${esc(full(ph[0]))}" alt="${esc(p.name)}" loading="lazy" onerror="if(this.dataset.full&&this.src.indexOf('/thumbs/')>-1)this.src=this.dataset.full"></button>${ph.length > 1 ? `<span class="count">${ph.length} photos</span>` : ""}`
-        : slab(p.name, p.wood, p.i);
+      const pic = `<a class="pic-link" href="${esc(p.url)}" aria-label="${esc(p.name)} – see details">${ph.length
+        ? `<img src="${esc(thumb(ph[0]))}" data-full="${esc(full(ph[0]))}" alt="${esc(p.name)}" loading="lazy" onerror="if(this.dataset.full&&this.src.indexOf('/thumbs/')>-1)this.src=this.dataset.full">${ph.length > 1 ? `<span class="count">${ph.length} photos</span>` : ""}`
+        : slab(p.name, p.wood, p.i)}</a>`;
       const cond = [p.dried, p.finish].filter(Boolean).join(" · ");
       const rough = /rough|sawn/i.test(p.finish) && !/planed|flattened/i.test(p.finish);
       return `<li class="item${sold ? " is-sold" : ""}" style="--d:${Math.min(n, 8) * 0.04}s">
         <div class="pic">${pic}${tag}</div>
         <div class="body">
           <div class="meta"><span class="wood">${esc(p.wood)}</span>${p.ref ? `<span class="ref">${esc(p.ref)}</span>` : ""}</div>
-          <h3>${esc(p.name)}</h3>
+          <h3><a href="${esc(p.url)}">${esc(p.name)}</a></h3>
           <span class="size">${dims.length ? dims.map(b => `<span class="nw">${esc(b)}</span>`).join(" · ") : "Ask us for measurements"}</span>
           ${cond ? `<span class="cond">${esc(cond)}</span>` : ""}
           ${rough ? `<span class="extra">Can be flattened or planed for you</span>` : ""}
           ${p.note ? `<span class="extra">${esc(p.note)}</span>` : ""}
           <div class="price">${money(p.price)}${p.was ? ` <s>${money(p.was)}</s>` : ""}</div>
-          <div class="acts">
-            <a class="wa" href="https://wa.me/${WA}?text=${msg}" target="_blank" rel="noopener" aria-label="Reserve ${esc(label)} on WhatsApp"><svg><use href="#i-chat"/></svg>Reserve</a>
+          <div class="acts${p.buy ? " two" : ""}">
+            ${p.buy ? `<a class="buy" href="${esc(p.buy)}">Buy now</a>` : ""}
+            <a class="wa" href="https://wa.me/${WA}?text=${msg}" target="_blank" rel="noopener" aria-label="Reserve ${esc(label)} on WhatsApp"><svg><use href="#i-chat"/></svg>${p.buy ? "" : "Reserve"}</a>
           </div>
         </div>
       </li>`;
@@ -212,21 +208,6 @@
   });
   sortSel.addEventListener("change", render);
 
-  // Photo viewer
-  const pv = document.getElementById("pv"), pvImg = document.getElementById("pv-img"), pvN = document.getElementById("pv-n");
-  let pvList = [], pvAt = 0;
-  const pvShow = () => { pvImg.src = full(pvList[pvAt]); pvN.textContent = pvList.length > 1 ? `${pvAt + 1} of ${pvList.length}` : ""; pv.classList.toggle("one", pvList.length < 2); };
-  list.addEventListener("click", e => {
-    const b = e.target.closest("button.zoom"); if (!b) return;
-    const p = stock[Number(b.dataset.i)]; pvList = p.photos; pvAt = 0;
-    pvImg.alt = p.name; document.getElementById("pv-t").textContent = `${p.ref ? p.ref + " · " : ""}${p.name}`;
-    pvShow(); if (pv.showModal) pv.showModal();
-  });
-  document.getElementById("pv-prev").addEventListener("click", () => { pvAt = (pvAt + pvList.length - 1) % pvList.length; pvShow(); });
-  document.getElementById("pv-next").addEventListener("click", () => { pvAt = (pvAt + 1) % pvList.length; pvShow(); });
-  pv.addEventListener("click", e => { if (e.target === pv) pv.close(); });
-  pv.addEventListener("keydown", e => { if (e.key === "ArrowLeft") document.getElementById("pv-prev").click(); if (e.key === "ArrowRight") document.getElementById("pv-next").click(); });
-
   const num = v => (v === null || v === undefined || v === "") ? "" : v;
   fetch("stock.json", {cache: "no-cache"})
     .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
@@ -234,7 +215,7 @@
       stock = rows.filter(p => p && p.name).map(p => ({...p,
         length: num(p.length), width: num(p.width), width_min: num(p.width_min), thickness: num(p.thickness),
         dried: p.dried || "", finish: p.finish || "", note: p.note || "", photos: p.photos || [],
-        price: Number(p.price) || 0, was: Number(p.was) || 0, status: String(p.status || "available").toLowerCase()}));
+        url: p.url || "", buy: p.buy || "", price: Number(p.price) || 0, was: Number(p.was) || 0, status: String(p.status || "available").toLowerCase()}));
       drawChips(); render();
     })
     .catch(() => { count.textContent = "Sorry, the stock list didn't load. Call or WhatsApp 07596 836838 and we'll tell you what's in."; });

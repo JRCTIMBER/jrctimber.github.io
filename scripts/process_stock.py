@@ -18,6 +18,7 @@ from PIL import Image, ImageOps
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import ebay_export  # noqa: E402
+import shop_extras  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 STOCK = ROOT / "_stock"
@@ -189,13 +190,16 @@ def process_photos(entries):
             write_entry(path, data, body)
 
 
-def write_feed(entries):
+def write_feed(entries, links=None):
+    links = links or {}
     items = []
     for _, data, _ in entries:
         if not data.get("name") or data.get("problem"):
             continue
         item = {k: data.get(k) for k in FEED_FIELDS}
         item["photos"] = [str(x) for x in (item["photos"] or [])]
+        item["url"] = shop_extras.page_path(data["ref"])
+        item["buy"] = shop_extras.buy_url(data, links)
         items.append(item)
     items.sort(key=lambda d: ref_number(d["ref"]) or 0)
     FEED.write_text(json.dumps(items, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
@@ -207,7 +211,12 @@ def main():
     apply_cms_button(entries)
     assign_numbers(entries)
     process_photos(entries)
-    write_feed(entries)
+    settings = ebay_export.load_settings()
+    links = shop_extras.stripe_sync(entries, settings, write_entry)
+    write_feed(entries, links)
+    shop_extras.piece_pages(entries, links, settings)
+    shop_extras.google_feed(entries, links, settings)
+    shop_extras.delivery_page(settings)
     ebay_export.build(entries)
 
 
