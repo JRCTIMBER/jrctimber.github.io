@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JRC Timber</title>
+<script>
+// Sends links from the old Wix site to the right part of the new page.
+(function () {
+  var p = location.pathname.toLowerCase();
+  var map = [["/shop", "shop.html"], ["/product-page", "shop.html"], ["/products", "#services"],
+             ["/services", "#services"], ["/about", "#about"], ["/contact", "#contact"], ["/faq", "#contact"]];
+  var hash = "";
+  for (var i = 0; i < map.length; i++) { if (p.indexOf(map[i][0]) === 0) { hash = map[i][1]; break; } }
+  location.replace("/" + hash);
+})();
+</script>
+</head>
+<body style="font-family:sans-serif;padding:24px">
+<p>This page has moved. <a href="/">Go to the JRC Timber home page</a>.</p>
+</body>
+</html>

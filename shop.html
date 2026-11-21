@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timber for Sale</title>
+<meta name="description" content="Live-edge slabs and boards in oak, walnut, yew, chestnut, maple, ash and redwood from local Essex trees. Call or WhatsApp JRC Timber on 07596 836838 to reserve a piece.">
+<link rel="canonical" href="https://jrctimber.co.uk/shop.html">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="Timber for sale – JRC Timber">
+<meta property="og:description" content="One-off slabs and boards from local trees near Colchester.">
+<meta property="og:image" content="https://jrctimber.co.uk/img/share.jpg">
+<meta name="theme-color" content="#365347">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Questrial&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.7 14.9L2 22l5.3-1.3A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.1 14.9l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 0 1 12 4zm-3.3 4c-.2 0-.5 0-.7.3-.3.3-1 .9-1 2.2s1 2.6 1.1 2.8c.1.2 2 3.1 4.9 4.3 2.4 1 2.9.8 3.4.7.5 0 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4l-.5-.3-1.9-.9c-.3-.1-.4-.1-.6.1l-.8 1c-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.4.1-.6l.5-.5.3-.5v-.5l-.9-2.1c-.2-.5-.4-.5-.6-.5h-.1z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><path fill="currentColor" d="M3 5h18c.6 0 1 .4 1 1v12c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1V6c0-.6.4-1 1-1zm1 2.4V17h16V7.4l-8 5.3-8-5.3zM5.8 7 12 11.1 18.2 7H5.8z"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="JRC Timber home"><img src="img/logo-icon.png" alt="" width="52" height="38"><span>JRC TIMBER</span></a>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="shop.html" aria-current="page">Shop</a><a href="index.html#services">Services</a><a href="index.html#work">Our work</a><a href="index.html#about">About</a><a href="index.html#contact">Contact</a>
+    </nav>
+    <a class="btn btn-wood" href="tel:+447596836838"><svg><use href="#i-phone"/></svg>07596 836838</a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav"><span></span>Menu</button>
+  </div>
+</header>
+
+<main>
+<section class="band shop-hero">
+  <div class="wrap">
+    <h1>Timber for sale</h1>
+    <div>
+      <p>One-off slabs and boards from local trees. Every piece is different, so message us to reserve one, ask for more photos or arrange to see it at the yard. We deliver, and smaller pieces can be shipped.</p>
+      <div class="ctas">
+        <a class="btn btn-wood" href="tel:+447596836838"><svg><use href="#i-phone"/></svg>Call 07596 836838</a>
+        <a class="btn btn-line" href="https://wa.me/447596836838?text=Hi%20JRC%20Timber%2C%20I'm%20interested%20in%20some%20timber." target="_blank" rel="noopener"><svg><use href="#i-chat"/></svg>WhatsApp us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="tools">
+      <div class="chips" id="chips" role="group" aria-label="Filter by wood"></div>
+      <label class="sort" for="sort">Sort
+        <select id="sort">
+          <option value="">Featured</option>
+          <option value="lo">Price: low to high</option>
+          <option value="hi">Price: high to low</option>
+          <option value="len">Longest first</option>
+        </select>
+      </label>
+    </div>
+    <p class="note" id="count">Loading stock…</p>
+    <ul class="items" id="items"></ul>
+
+    <div class="info">
+      <div><b>Reserve a piece</b><p>Tap Reserve and the piece number is added to your WhatsApp message for you. We can send more photos and measurements.</p></div>
+      <div><b>Delivery &amp; shipping</b><p>We deliver, and smaller pieces can be shipped. Tell us where you are and we'll give you a price.</p></div>
+      <div><b>Collect from the yard</b><p>Layer Road, Great Wigborough, Colchester CO5 7RP. Visits by appointment, 7 days a week.</p></div>
+      <div><b>Flattened, planed or cut</b><p>We can CNC flatten, plane or cut a piece to size before you collect it, or make it into a table. <a href="index.html#faq">Questions? See our FAQ</a>.</p></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="band">
+  <div class="wrap">
+    <img src="img/logo-white.png" alt="JRC Timber" width="520" height="375" loading="lazy">
+    <div class="cols">
+      <span>Layer Road, Great Wigborough, Colchester CO5 7RP</span>
+      <a href="tel:+447596836838">07596 836838</a>
+      <a href="mailto:info@jrctimber.co.uk">info@jrctimber.co.uk</a>
+      <a href="https://www.instagram.com/jrctimber/" target="_blank" rel="noopener">Instagram</a>
+      <a href="https://www.facebook.com/JRCTimber/" target="_blank" rel="noopener">Facebook</a>
+      <a href="index.html#faq">FAQ</a>
+      <span>© <span id="yr">2026</span> JRC Timber</span>
+    </div>
+  </div>
+</footer>
+
+<nav class="bar" aria-label="Quick contact">
+  <a href="tel:+447596836838"><svg><use href="#i-phone"/></svg>Call</a>
+  <a href="https://wa.me/447596836838?text=Hi%20JRC%20Timber%2C%20" target="_blank" rel="noopener"><svg><use href="#i-chat"/></svg>WhatsApp</a>
+  <a href="index.html#contact"><svg><use href="#i-mail"/></svg>Enquire</a>
+</nav>
+
+<script>
+{
+  // The stock list lives in stock.csv. Columns:
+  // ref, name, wood, length, width, width_min, thickness, dried, finish, price, was, status, note, photo
+  // length in metres (e.g. 2.45m), width / width_min / thickness in mm (e.g. 450), dried: Air dried or Kiln dried,
+  // finish: e.g. Rough sawn, Flattened, Planed. status: available, reserved or sold. photo: a file in img/ or blank.
+  const WA = "447596836838";
+  const tones = {
+    Oak: ["#d2a670", "#a87b45"], Walnut: ["#7a553a", "#4e3423"], Yew: ["#cd7d4f", "#9c5530"],
+    Chestnut: ["#bf8a57", "#8f6136"], Maple: ["#e6cfa6", "#c1a274"], Ash: ["#e0c9a4", "#b99c72"],
+    Redwood: ["#b9583e", "#8a3a27"]
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  const money = n => "£" + Number(n).toLocaleString("en-GB");
+
+  function parseCSV(text) {
+    const rows = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+      else if (c === '"') q = true;
+      else if (c === ",") { row.push(cell); cell = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+      else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    const head = rows.shift().map(h => h.trim().toLowerCase());
+    return rows.filter(r => r.some(v => v.trim())).map(r => Object.fromEntries(head.map((h, i) => [h, (r[i] || "").trim()])));
+  }
+
+  // A drawn slab in the wood's colour, used until a real photo is added.
+  function slab(name, wood, idx) {
+    const [face, grain] = tones[wood] || ["#c9a27a", "#9c7650"];
+    let s = 7 + idx * 131 + name.length * 17;
+    const rnd = () => (s = s * 16807 % 2147483647) / 2147483647;
+    const top = [], bot = [];
+    for (let i = 0; i <= 8; i++) { const x = 30 + i * 42.5; top.push(`${x},${62 + rnd() * 22}`); bot.push(`${x},${238 - rnd() * 22}`); }
+    const outline = `M${top.join(" L")} L${bot.reverse().join(" L")} Z`;
+    let lines = "";
+    for (let k = 0; k < 7; k++) {
+      const y = 95 + k * 18 + rnd() * 6, a = 8 + rnd() * 14;
+      lines += `<path d="M20 ${y} C120 ${y - a} 200 ${y + a} 300 ${y - a / 2} S380 ${y + a / 2} 400 ${y}" fill="none" stroke="${grain}" stroke-width="2" opacity=".55"/>`;
+    }
+    const kx = 90 + rnd() * 220, ky = 125 + rnd() * 50;
+    return `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="400" height="300" fill="#f3f2ee"/>
+      <path d="${outline}" transform="translate(6 10)" fill="#000" opacity=".08"/>
+      <clipPath id="c${idx}"><path d="${outline}"/></clipPath>
+      <path d="${outline}" fill="${face}"/>
+      <g clip-path="url(#c${idx})">${lines}<ellipse cx="${kx}" cy="${ky}" rx="9" ry="6" fill="${grain}"/><rect y="0" width="400" height="90" fill="#fff" opacity=".07"/></g>
+      <path d="${outline}" fill="none" stroke="${grain}" stroke-width="3"/>
+    </svg>`;
+  }
+
+  // "2.45m", "2.45" or "2450mm" -> metres, for sorting
+  const metres = t => { const n = parseFloat(t); if (!n) return 0; return /mm/i.test(t) || n > 20 ? n / 1000 : n; };
+  const withUnit = (t, unit) => /[a-z]/i.test(t) ? t : t + unit;
+  function specs(p) {
+    const bits = [];
+    if (p.length) bits.push(withUnit(p.length, "m") + " long");
+    if (p.width) bits.push((p.width_min ? `${p.width_min}–${withUnit(p.width, "mm")}` : withUnit(p.width, "mm")) + " wide");
+    if (p.thickness) bits.push(withUnit(p.thickness, "mm") + " thick");
+    return bits;
+  }
+
+  let stock = [], wood = "All";
+  const chips = document.getElementById("chips"), list = document.getElementById("items");
+  const count = document.getElementById("count"), sortSel = document.getElementById("sort");
+
+  function render() {
+    let rows = stock.map((p, i) => ({...p, i})).filter(p => wood === "All" || p.wood === wood);
+    const v = sortSel.value;
+    if (v === "lo") rows.sort((a, b) => a.price - b.price);
+    if (v === "hi") rows.sort((a, b) => b.price - a.price);
+    if (v === "len") rows.sort((a, b) => metres(b.length) - metres(a.length));
+    const avail = rows.filter(p => p.status !== "sold").length;
+    count.textContent = `${avail} piece${avail === 1 ? "" : "s"} available. Stock changes quickly, so check with us that a piece is still here.`;
+    list.classList.remove("fresh"); void list.offsetWidth; list.classList.add("fresh");
+    list.innerHTML = rows.length ? rows.map((p, n) => {
+      const dims = specs(p);
+      const label = `${p.ref ? p.ref + ", " : ""}${p.name}${p.length ? " (" + withUnit(p.length, "m") + ")" : ""}`;
+      const msg = encodeURIComponent(`Hi JRC Timber, is ${p.ref ? "piece " + p.ref + ", the " : "the "}${p.name}${p.length ? " (" + withUnit(p.length, "m") + ")" : ""}, ${money(p.price)}, still available?`);
+      const sold = p.status === "sold", reserved = p.status === "reserved";
+      const tag = sold ? '<span class="tag sold">Sold</span>' : reserved ? '<span class="tag">Reserved</span>' : p.was ? '<span class="tag">Reduced</span>' : "";
+      const pic = p.photo ? `<img src="img/${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy">` : slab(p.name, p.wood, p.i);
+      const cond = [p.dried, p.finish].filter(Boolean).join(" · ");
+      const rough = /rough|sawn/i.test(p.finish) && !/planed|flattened/i.test(p.finish);
+      return `<li class="item${sold ? " is-sold" : ""}" style="--d:${Math.min(n, 8) * 0.04}s">
+        <div class="pic">${pic}${tag}</div>
+        <div class="body">
+          <div class="meta"><span class="wood">${esc(p.wood)}</span>${p.ref ? `<span class="ref">${esc(p.ref)}</span>` : ""}</div>
+          <h3>${esc(p.name)}</h3>
+          <span class="size">${dims.length ? dims.map(b => `<span class="nw">${esc(b)}</span>`).join(" · ") : "Ask us for measurements"}</span>
+          ${cond ? `<span class="cond">${esc(cond)}</span>` : ""}
+          ${rough ? `<span class="extra">Can be flattened or planed for you</span>` : ""}
+          ${p.note ? `<span class="extra">${esc(p.note)}</span>` : ""}
+          <div class="price">${money(p.price)}${p.was ? ` <s>${money(p.was)}</s>` : ""}</div>
+          <div class="acts">
+            <a class="wa" href="https://wa.me/${WA}?text=${msg}" target="_blank" rel="noopener" aria-label="Reserve ${esc(label)} on WhatsApp"><svg><use href="#i-chat"/></svg>Reserve</a>
+          </div>
+        </div>
+      </li>`;
+    }).join("") : '<li class="empty">Nothing in this wood right now. Call or WhatsApp and we\'ll tell you what\'s coming through the mill.</li>';
+  }
+
+  function drawChips() {
+    const woods = ["All", ...new Set(stock.map(p => p.wood))];
+    chips.innerHTML = woods.map(w => {
+      const n = w === "All" ? stock.length : stock.filter(p => p.wood === w).length;
+      return `<button type="button" data-w="${esc(w)}" aria-pressed="${w === wood}">${esc(w)}<span>${n}</span></button>`;
+    }).join("");
+  }
+
+  chips.addEventListener("click", e => {
+    const b = e.target.closest("button[data-w]"); if (!b) return;
+    wood = b.dataset.w; drawChips(); render();
+  });
+  sortSel.addEventListener("change", render);
+
+  fetch("stock.csv", {cache: "no-cache"})
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(t => { stock = parseCSV(t).map(p => ({...p, price: Number(p.price) || 0, was: Number(p.was) || 0, status: (p.status || "available").toLowerCase()})); drawChips(); render(); })
+    .catch(() => { count.textContent = "Sorry, the stock list didn't load. Call or WhatsApp 07596 836838 and we'll tell you what's in."; });
+
+}
+</script>
+<script src="site.js"></script>
+</body>
+</html>
