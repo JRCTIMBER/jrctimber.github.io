@@ -103,6 +103,52 @@ content:
         label: Extra details
         type: string
         description: "Optional, e.g. Ideal for resin projects"
+      - name: ebay
+        label: Listed on eBay
+        type: boolean
+        description: Tick once it's been uploaded to eBay. Unticked pieces up to 1.2m long go in the eBay file automatically (see jrctimber.github.io/ebay.html).
+
+  - name: ebay-settings
+    label: eBay settings
+    type: file
+    path: _data/ebay.yml
+    fields:
+      - name: site_url
+        label: Website address (used for photo links)
+        type: string
+      - name: location
+        label: Item location shown on eBay
+        type: string
+      - name: postcode
+        label: Postcode
+        type: string
+      - name: dispatch_days
+        label: Dispatch time (days)
+        type: number
+      - name: max_length_m
+        label: Longest piece to list on eBay (m)
+        type: number
+      - name: small_max_length_m
+        label: Small parcel - max length (m)
+        type: number
+      - name: small_max_width_mm
+        label: Small parcel - max width (mm)
+        type: number
+      - name: small_policy
+        label: Small parcel - eBay postage policy name
+        type: string
+      - name: medium_max_length_m
+        label: Large parcel - max length (m)
+        type: number
+      - name: medium_max_width_mm
+        label: Large parcel - max width (mm)
+        type: number
+      - name: medium_policy
+        label: Large parcel - eBay postage policy name
+        type: string
+      - name: collection_policy
+        label: Collection only - eBay postage policy name
+        type: string
 
 actions:
   - name: sold

@@ -30,6 +30,26 @@ writes `stock.json` for the shop page, and republishes the site.
 
 Each piece is a small file in `_stock/`. The last number used is kept in `.stock-counter`, so numbers are never reused.
 
+## eBay
+
+Every save also updates **jrctimber.github.io/ebay.html**, which has a download button for `ebay.csv`:
+an eBay upload file (eBay's Timber category template, category 180970) with every piece that is
+
+- Available, not ticked **Listed on eBay**, and no longer than 1.2m
+- has a length, a width and at least one photo.
+
+Postage is chosen by size, using postage policies saved in the eBay account (names in `_data/ebay.yml`,
+editable in Pages CMS under **eBay settings**):
+
+| Size | eBay postage policy |
+|---|---|
+| up to 80cm long and 40cm wide | `JRC £5 postage` |
+| up to 1.2m long and 50cm wide | `JRC £10 postage` |
+| wider | `JRC collection only` |
+
+Upload the file in eBay **Seller Hub → Reports → Uploads**, then tick **Listed on eBay** on those pieces.
+Photo links use `site_url` in the eBay settings: change it to `https://jrctimber.co.uk` once the domain is switched.
+
 ## Common edits
 
 - **Services:** in `index.html`, find `const services = [` and edit the name or description. The optional fifth item is the max size, e.g. `"Slabs up to 1.2m wide × 3m long"`.

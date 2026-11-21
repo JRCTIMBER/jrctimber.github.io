@@ -5,6 +5,7 @@ Runs in GitHub Actions (.github/workflows/site.yml):
   2. Gives every new piece the next stock number (JRC-025, JRC-026, ...).
   3. Shrinks new photos, removes their location data and makes a small thumbnail for the shop.
   4. Writes stock.json, which the shop page reads.
+  5. Writes ebay.csv and ebay.html for pieces that can go on eBay (see ebay_export.py).
 """
 import json
 import os
@@ -14,6 +15,9 @@ from pathlib import Path
 
 import yaml
 from PIL import Image, ImageOps
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import ebay_export  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 STOCK = ROOT / "_stock"
@@ -157,6 +161,7 @@ def main():
     assign_numbers(entries)
     process_photos(entries)
     write_feed(entries)
+    ebay_export.build(entries)
 
 
 if __name__ == "__main__":
