@@ -5,31 +5,30 @@ A simple static website for jrctimber.co.uk, hosted free on GitHub Pages.
 ## What's in here
 
 - `index.html` – the home page (services, recent work, about, contact form)
-- `shop.html` – the shop page, which reads its list from `stock.csv`
-- `stock.csv` – the stock list (open in Excel or Google Sheets)
+- `shop.html` – the shop page, which reads `stock.json`
+- `_stock/` – one file per piece of stock (managed in Pages CMS)
+- `stock.json` – made automatically from `_stock/`; don't edit by hand
 - `style.css` – the look of both pages
 - `site.js` – the phone menu
 - `img/` – photos and logo, already resized for the web
 - `404.html` – sends old Wix links (e.g. /shop, /product-page/...) to the right section
 - Custom domain: set jrctimber.co.uk under Settings → Pages when switching over (GitHub creates a CNAME file)
 
-## Updating the shop
+## Updating the shop (stock manager)
 
-Open `stock.csv` in Excel or Google Sheets. One row per piece:
+Stock is managed at **https://app.pagescms.org** (sign in with GitHub). Open this repository and tap **Stock**.
 
-- **ref** – the piece number, e.g. `JRC-025`. Customers quote it when they reserve.
-- **name, wood, price** – e.g. `Oak slab, Oak, 170`
-- **length** – in metres, e.g. `2.45m`
-- **width** – widest point in mm, e.g. `520`. **width_min** – narrowest point in mm (optional)
-- **thickness** – in mm, e.g. `55`
-- **dried** – `Air dried` or `Kiln dried`
-- **finish** – e.g. `Rough sawn`, `Flattened`, `Planed`. Rough sawn pieces show "Can be flattened or planed for you".
-- **was** – the old price, if it's reduced (shows a "Reduced" tag)
-- **status** – `available`, `reserved` or `sold`
-- **note** – optional short line, e.g. `Ideal for resin projects`
-- **photo** – a file name in `img/`, e.g. `stock-oak-slab.jpg`. Leave blank to show a drawn placeholder.
+- **Add a piece:** tap **Add an entry**, take or choose photos, fill in the name, wood, measurements and price, and **Save**.
+  About a minute later it's on the shop with the next stock number (JRC-025, JRC-026, …). Open the piece again to see its number.
+- **Sold or reserved:** tap **Sold or reserved a piece** (in the menu or at the top of the Stock screen), type the stock number,
+  choose Sold, Reserved, Available again or Remove from the site, and confirm.
+- **Edit a piece:** search by stock number, name or wood, open it, change it and **Save**.
 
-Save it as CSV and upload it to replace the old one.
+Behind the scenes (`.github/workflows/site.yml` and `scripts/process_stock.py`) every change:
+gives new pieces a stock number, shrinks photos to 1600px with a 640px thumbnail and removes their location data,
+writes `stock.json` for the shop page, and republishes the site.
+
+Each piece is a small file in `_stock/`. The last number used is kept in `.stock-counter`, so numbers are never reused.
 
 ## Common edits
 

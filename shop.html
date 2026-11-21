@@ -64,6 +64,11 @@
     </div>
     <p class="note" id="count">Loading stock…</p>
     <ul class="items" id="items"></ul>
+    <dialog id="pv" aria-labelledby="pv-t">
+      <div class="pv-bar"><span id="pv-t"></span><form method="dialog"><button>Close</button></form></div>
+      <img id="pv-img" alt="">
+      <div class="pv-nav"><button type="button" id="pv-prev" aria-label="Previous photo">‹</button><span id="pv-n"></span><button type="button" id="pv-next" aria-label="Next photo">›</button></div>
+    </dialog>
 
     <div class="info">
       <div><b>Reserve a piece</b><p>Tap Reserve and the piece number is added to your WhatsApp message for you. We can send more photos and measurements.</p></div>
@@ -98,33 +103,22 @@
 
 <script>
 {
-  // The stock list lives in stock.csv. Columns:
-  // ref, name, wood, length, width, width_min, thickness, dried, finish, price, was, status, note, photo
-  // length in metres (e.g. 2.45m), width / width_min / thickness in mm (e.g. 450), dried: Air dried or Kiln dried,
-  // finish: e.g. Rough sawn, Flattened, Planed. status: available, reserved or sold. photo: a file in img/ or blank.
+  // Stock comes from stock.json, which is made automatically from the pieces added in Pages CMS
+  // (one file per piece in _stock/). See README.md.
   const WA = "447596836838";
   const tones = {
     Oak: ["#d2a670", "#a87b45"], Walnut: ["#7a553a", "#4e3423"], Yew: ["#cd7d4f", "#9c5530"],
     Chestnut: ["#bf8a57", "#8f6136"], Maple: ["#e6cfa6", "#c1a274"], Ash: ["#e0c9a4", "#b99c72"],
-    Redwood: ["#b9583e", "#8a3a27"]
+    Redwood: ["#b9583e", "#8a3a27"], Elm: ["#c49a6c", "#946a40"], Cedar: ["#c98f62", "#9a613a"],
+    Cherry: ["#c47e5a", "#955436"], Sycamore: ["#eadbbd", "#c9b48c"], Beech: ["#dcb98f", "#b48d62"],
+    Hornbeam: ["#e2d5b8", "#bba98a"], "London plane": ["#c99b78", "#9b6c4b"], Poplar: ["#e3d6b2", "#bcae85"]
   };
   const esc = t => String(t).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
   const money = n => "£" + Number(n).toLocaleString("en-GB");
 
-  function parseCSV(text) {
-    const rows = []; let row = [], cell = "", q = false;
-    for (let i = 0; i < text.length; i++) {
-      const c = text[i];
-      if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
-      else if (c === '"') q = true;
-      else if (c === ",") { row.push(cell); cell = ""; }
-      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
-      else cell += c;
-    }
-    if (cell || row.length) { row.push(cell); rows.push(row); }
-    const head = rows.shift().map(h => h.trim().toLowerCase());
-    return rows.filter(r => r.some(v => v.trim())).map(r => Object.fromEntries(head.map((h, i) => [h, (r[i] || "").trim()])));
-  }
+  // "/img/stock/abc.jpg" -> "img/stock/abc.jpg", and its small version for the shop grid
+  const full = p => String(p).replace(/^\//, "");
+  const thumb = p => full(p).replace(/([^/]+?)(\.[a-z]+)?$/i, "thumbs/$1.jpg");
 
   // A drawn slab in the wood's colour, used until a real photo is added.
   function slab(name, wood, idx) {
@@ -152,7 +146,7 @@
 
   // "2.45m", "2.45" or "2450mm" -> metres, for sorting
   const metres = t => { const n = parseFloat(t); if (!n) return 0; return /mm/i.test(t) || n > 20 ? n / 1000 : n; };
-  const withUnit = (t, unit) => /[a-z]/i.test(t) ? t : t + unit;
+  const withUnit = (t, unit) => /[a-z]/i.test(String(t)) ? String(t) : t + unit;
   function specs(p) {
     const bits = [];
     if (p.length) bits.push(withUnit(p.length, "m") + " long");
@@ -180,7 +174,10 @@
       const msg = encodeURIComponent(`Hi JRC Timber, is ${p.ref ? "piece " + p.ref + ", the " : "the "}${p.name}${p.length ? " (" + withUnit(p.length, "m") + ")" : ""}, ${money(p.price)}, still available?`);
       const sold = p.status === "sold", reserved = p.status === "reserved";
       const tag = sold ? '<span class="tag sold">Sold</span>' : reserved ? '<span class="tag">Reserved</span>' : p.was ? '<span class="tag">Reduced</span>' : "";
-      const pic = p.photo ? `<img src="img/${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy">` : slab(p.name, p.wood, p.i);
+      const ph = p.photos || [];
+      const pic = ph.length
+        ? `<button type="button" class="zoom" data-i="${p.i}" aria-label="View photos of ${esc(p.name)}"><img src="${esc(thumb(ph[0]))}" data-full="${esc(full(ph[0]))}" alt="${esc(p.name)}" loading="lazy" onerror="if(this.dataset.full&&this.src.indexOf('/thumbs/')>-1)this.src=this.dataset.full"></button>${ph.length > 1 ? `<span class="count">${ph.length} photos</span>` : ""}`
+        : slab(p.name, p.wood, p.i);
       const cond = [p.dried, p.finish].filter(Boolean).join(" · ");
       const rough = /rough|sawn/i.test(p.finish) && !/planed|flattened/i.test(p.finish);
       return `<li class="item${sold ? " is-sold" : ""}" style="--d:${Math.min(n, 8) * 0.04}s">
@@ -215,9 +212,31 @@
   });
   sortSel.addEventListener("change", render);
 
-  fetch("stock.csv", {cache: "no-cache"})
-    .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
-    .then(t => { stock = parseCSV(t).map(p => ({...p, price: Number(p.price) || 0, was: Number(p.was) || 0, status: (p.status || "available").toLowerCase()})); drawChips(); render(); })
+  // Photo viewer
+  const pv = document.getElementById("pv"), pvImg = document.getElementById("pv-img"), pvN = document.getElementById("pv-n");
+  let pvList = [], pvAt = 0;
+  const pvShow = () => { pvImg.src = full(pvList[pvAt]); pvN.textContent = pvList.length > 1 ? `${pvAt + 1} of ${pvList.length}` : ""; pv.classList.toggle("one", pvList.length < 2); };
+  list.addEventListener("click", e => {
+    const b = e.target.closest("button.zoom"); if (!b) return;
+    const p = stock[Number(b.dataset.i)]; pvList = p.photos; pvAt = 0;
+    pvImg.alt = p.name; document.getElementById("pv-t").textContent = `${p.ref ? p.ref + " · " : ""}${p.name}`;
+    pvShow(); if (pv.showModal) pv.showModal();
+  });
+  document.getElementById("pv-prev").addEventListener("click", () => { pvAt = (pvAt + pvList.length - 1) % pvList.length; pvShow(); });
+  document.getElementById("pv-next").addEventListener("click", () => { pvAt = (pvAt + 1) % pvList.length; pvShow(); });
+  pv.addEventListener("click", e => { if (e.target === pv) pv.close(); });
+  pv.addEventListener("keydown", e => { if (e.key === "ArrowLeft") document.getElementById("pv-prev").click(); if (e.key === "ArrowRight") document.getElementById("pv-next").click(); });
+
+  const num = v => (v === null || v === undefined || v === "") ? "" : v;
+  fetch("stock.json", {cache: "no-cache"})
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(rows => {
+      stock = rows.filter(p => p && p.name).map(p => ({...p,
+        length: num(p.length), width: num(p.width), width_min: num(p.width_min), thickness: num(p.thickness),
+        dried: p.dried || "", finish: p.finish || "", note: p.note || "", photos: p.photos || [],
+        price: Number(p.price) || 0, was: Number(p.was) || 0, status: String(p.status || "available").toLowerCase()}));
+      drawChips(); render();
+    })
     .catch(() => { count.textContent = "Sorry, the stock list didn't load. Call or WhatsApp 07596 836838 and we'll tell you what's in."; });
 
 }

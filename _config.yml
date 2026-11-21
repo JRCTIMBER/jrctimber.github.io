@@ -1,0 +1,9 @@
+title: JRC Timber
+
+# Each piece of stock is a file in _stock/, managed through Pages CMS (see .pages.yml).
+# scripts/process_stock.py turns them into stock.json for the shop page.
+
+exclude:
+  - README.md
+  - scripts
+  - stock.csv

@@ -1,0 +1,123 @@
+# Pages CMS set-up for JRC Timber (https://app.pagescms.org)
+# Gives a phone-friendly "Stock" screen. Each piece is saved as a file in _stock/.
+
+media:
+  - name: stock
+    label: Stock photos
+    input: img/stock
+    output: /img/stock
+    rename: random
+    extensions: [jpg, jpeg, png, webp]
+
+content:
+  - name: stock
+    label: Stock
+    type: collection
+    path: _stock
+    filename: "{year}{month}{day}-{hour}{minute}{second}.md"
+    view:
+      fields: [ref, name, wood, price, status]
+      primary: name
+      sort: [ref, price, name]
+      search: [ref, name, wood]
+      default:
+        sort: ref
+        order: desc
+    fields:
+      - name: ref
+        label: Stock number
+        type: string
+        readonly: true
+        description: Added automatically about a minute after you save. Quote it when the piece sells.
+      - name: photos
+        label: Photos
+        type: image
+        description: Take or choose up to 6 photos. The first one is shown in the shop. They're shrunk automatically.
+        options:
+          media: stock
+          multiple:
+            max: 6
+      - name: name
+        label: Name
+        type: string
+        required: true
+        description: "e.g. Character oak slab"
+      - name: wood
+        label: Wood
+        type: select
+        required: true
+        options:
+          values: [Oak, Walnut, Yew, Chestnut, Maple, Ash, Redwood, Elm, Cedar, Cherry, Sycamore, Beech, Hornbeam, London plane, Poplar, Other]
+      - name: length
+        label: Length (metres)
+        type: number
+        description: "e.g. 2.45"
+        options:
+          min: 0
+      - name: width
+        label: Width at widest (mm)
+        type: number
+        options:
+          min: 0
+      - name: width_min
+        label: Width at narrowest (mm)
+        type: number
+        description: Leave blank if it's the same all the way along.
+        options:
+          min: 0
+      - name: thickness
+        label: Thickness (mm)
+        type: number
+        options:
+          min: 0
+      - name: dried
+        label: Drying
+        type: select
+        options:
+          values: [Air dried, Kiln dried, Fresh sawn]
+      - name: finish
+        label: Finish
+        type: select
+        description: Rough sawn pieces show "Can be flattened or planed for you".
+        options:
+          values: [Rough sawn, Flattened, Planed, Sanded, Finished]
+      - name: price
+        label: Price (£)
+        type: number
+        required: true
+        options:
+          min: 0
+      - name: was
+        label: Was price (£)
+        type: number
+        description: Only if it's reduced. Shows a "Reduced" tag.
+        options:
+          min: 0
+      - name: status
+        label: Status
+        type: select
+        description: Leave as Available for new pieces.
+        options:
+          values: [Available, Reserved, Sold]
+      - name: note
+        label: Extra details
+        type: string
+        description: "Optional, e.g. Ideal for resin projects"
+
+actions:
+  - name: sold
+    label: Sold or reserved a piece
+    workflow: site.yml
+    ref: main
+    cancelable: false
+    fields:
+      - name: stock
+        label: Stock number (e.g. JRC-025 or just 25)
+        type: text
+        required: true
+      - name: what
+        label: What's happened?
+        type: select
+        required: true
+        default: Sold
+        options: [Sold, Reserved, Available again, Remove from the site]
