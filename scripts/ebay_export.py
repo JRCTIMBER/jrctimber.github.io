@@ -169,9 +169,12 @@ def build(entries):
     with TEMPLATE.open(encoding="utf-8") as f:
         info, header = list(csv.reader(f))[:2]
     header = header + EXTRA_COLUMNS
-    ready, waiting = [], []
+    ready, waiting, problems = [], [], []
     for _, d, _ in entries:
         if not d.get("name"):
+            continue
+        if d.get("problem"):
+            problems.append((d, d["problem"]))
             continue
         reason = why_not(d, s)
         if reason == "":
@@ -188,15 +191,17 @@ def build(entries):
             r, label = row(d, header, s)
             w.writerow(r)
             lines.append((d, label))
-    write_page(lines, waiting)
+    write_page(lines, waiting, problems)
     print(f"ebay.csv: {len(lines)} pieces ready, {len(waiting)} need details")
 
 
-def write_page(lines, waiting):
+def write_page(lines, waiting, problems=()):
     def li(d, extra):
         return f"<tr><td class='nw'>{html.escape(d['ref'])}</td><td>{html.escape(d['name'])}</td><td class='nw'>£{fmt(num(d['price']))}</td><td>{html.escape(extra)}</td></tr>"
     ready = "".join(li(d, label) for d, label in lines) or "<tr><td colspan='4'>Nothing new to list right now.</td></tr>"
     todo = "".join(li(d, why) for d, why in waiting)
+    probs = "".join(f"<tr><td class='nw'>{html.escape(str(d.get('ref') or ''))}</td><td>{html.escape(d['name'])}</td><td colspan='2'>{html.escape(why)}</td></tr>" for d, why in problems)
+    prob_block = f"<h2>Needs checking</h2><p>These pieces are hidden from the shop and eBay until fixed in the stock manager:</p><div class='scroll'><table class='eb'><tr><th>No.</th><th>Piece</th><th colspan='2'>Problem</th></tr>{probs}</table></div>" if probs else ""
     todo_block = f"<h2>Not in the file yet</h2><p>These can go on eBay once they have a bit more detail in the stock manager:</p><div class='scroll'><table class='eb'><tr><th>No.</th><th>Piece</th><th>Price</th><th>Needs</th></tr>{todo}</table></div>" if todo else ""
     OUT_PAGE.write_text(f"""<!DOCTYPE html>
 <html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -208,6 +213,7 @@ def write_page(lines, waiting):
 <main class="band">
 <h1>eBay upload</h1>
 <p style="margin:12px 0 20px;color:var(--muted)">Available pieces that aren't ticked "Listed on eBay". Up to 80 × 40cm: £5 postage. Up to 1.2m × 50cm: £10 postage. Anything bigger: collection only. This page updates every time you save in the stock manager.</p>
+{prob_block}
 <a class="btn btn-dark" href="ebay.csv" download>Download eBay file ({len(lines)} piece{'s' if len(lines) != 1 else ''})</a>
 <h2>In the file</h2>
 <div class="scroll"><table class="eb"><tr><th>No.</th><th>Piece</th><th>Price</th><th>Postage</th></tr>{ready}</table></div>

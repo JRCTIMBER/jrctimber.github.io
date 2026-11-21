@@ -25,10 +25,14 @@ content:
         order: desc
     fields:
       - name: ref
-        label: Stock number
+        label: Stock number (from the tag)
+        type: string
+        description: Type the number on the tag, e.g. 25. Leave blank to get the next free number automatically about a minute after you save.
+      - name: problem
+        label: Problem
         type: string
         readonly: true
-        description: Added automatically about a minute after you save. Quote it when the piece sells.
+        description: Empty means all is fine. If a number is used twice, the piece is hidden from the shop until it's fixed.
       - name: photos
         label: Photos
         type: image

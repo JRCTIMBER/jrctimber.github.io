@@ -25,6 +25,7 @@ PHOTOS = ROOT / "img" / "stock"
 THUMBS = PHOTOS / "thumbs"
 COUNTER = ROOT / ".stock-counter"
 FEED = ROOT / "stock.json"
+INDEX = ROOT / ".stock-index.json"  # which file owns each stock number
 FEED_FIELDS = ["ref", "name", "wood", "length", "width", "width_min", "thickness",
                "dried", "finish", "price", "was", "status", "note", "photos"]
 FULL_SIZE = 1600
@@ -93,21 +94,67 @@ def apply_cms_button(entries):
     sys.exit(f"No piece with stock number JRC-{wanted:03d} was found")
 
 
+def put_first(data, key):
+    return {key: data[key], **{k: v for k, v in data.items() if k != key}}
+
+
 def assign_numbers(entries):
+    """Tidy typed-in tag numbers, catch numbers used twice, and number pieces left blank."""
+    index = json.loads(INDEX.read_text()) if INDEX.exists() else {}
+    # 1. "25", "jrc25", "JRC-25" -> "JRC-025"
+    for entry in entries:
+        path, data, body = entry
+        n = ref_number(data.get("ref"))
+        if data.get("ref") not in (None, "") and n is None:
+            data["problem"] = f"Couldn't read the stock number {data.get('ref')!r}. Type just the number from the tag, e.g. 25."
+            write_entry(path, data, body)
+            continue
+        if n is not None and data.get("ref") != f"JRC-{n:03d}":
+            data["ref"] = f"JRC-{n:03d}"
+            entry[1] = data = put_first(data, "ref")
+            write_entry(path, data, body)
+    # 2. Same number on two pieces: the one that already had it keeps it, the other is flagged
+    groups = {}
+    for entry in entries:
+        n = ref_number(entry[1].get("ref"))
+        if n is not None:
+            groups.setdefault(n, []).append(entry)
+    flagged = set()
+    for n, group in groups.items():
+        if len(group) < 2:
+            continue
+        owner = next((e for e in group if index.get(e[1]["ref"]) == e[0].name), group[0])
+        for e in group:
+            if e is not owner:
+                flagged.add(id(e))
+                e[1]["problem"] = (f"Stock number {e[1]['ref']} is already used by \"{owner[1].get('name')}\". "
+                                   "Check the tag and type the right number, then save.")
+                write_entry(*e)
+                print(f"Problem: {e[1]['ref']} used twice ({e[1].get('name')})")
+    # 3. Clear old problems that are now fixed
+    for entry in entries:
+        path, data, body = entry
+        bad_ref = data.get("ref") not in (None, "") and ref_number(data.get("ref")) is None
+        if data.get("problem") and id(entry) not in flagged and not bad_ref:
+            data.pop("problem")
+            write_entry(path, data, body)
+    # 4. Blank numbers get the next one after the highest number ever used
     used = [ref_number(d.get("ref")) for _, d, _ in entries]
-    last = max([n for n in used if n] + [int(COUNTER.read_text().strip() or 0) if COUNTER.exists() else 0])
+    last = max([n for n in used if n is not None] + [int(COUNTER.read_text().strip() or 0) if COUNTER.exists() else 0])
     for entry in entries:  # sorted by filename, which starts with the date and time it was added
         path, data, body = entry
-        if not data.get("ref"):
+        if data.get("ref") in (None, ""):
             last += 1
             data["ref"] = f"JRC-{last:03d}"
             data.setdefault("status", "Available")
-            # keep the stock number near the top of the file
-            data = {"ref": data["ref"], **{k: v for k, v in data.items() if k != "ref"}}
-            entry[1] = data
+            entry[1] = data = put_first(data, "ref")
             write_entry(path, data, body)
             print(f"New piece {data['ref']}: {data.get('name')}")
+        elif not data.get("problem"):
+            data.setdefault("status", "Available")
     COUNTER.write_text(f"{last}\n")
+    INDEX.write_text(json.dumps({d["ref"]: p.name for p, d, _ in entries if d.get("ref") and not d.get("problem")},
+                                indent=1, sort_keys=True) + "\n")
 
 
 def process_photos(entries):
@@ -145,7 +192,7 @@ def process_photos(entries):
 def write_feed(entries):
     items = []
     for _, data, _ in entries:
-        if not data.get("name"):
+        if not data.get("name") or data.get("problem"):
             continue
         item = {k: data.get(k) for k in FEED_FIELDS}
         item["photos"] = [str(x) for x in (item["photos"] or [])]

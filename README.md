@@ -18,8 +18,11 @@ A simple static website for jrctimber.co.uk, hosted free on GitHub Pages.
 
 Stock is managed at **https://app.pagescms.org** (sign in with GitHub). Open this repository and tap **Stock**.
 
-- **Add a piece:** tap **Add an entry**, take or choose photos, fill in the name, wood, measurements and price, and **Save**.
-  About a minute later it's on the shop with the next stock number (JRC-025, JRC-026, …). Open the piece again to see its number.
+- **Add a piece:** tap **Add an entry**, type the number from the piece's tag (e.g. `25`), take or choose photos,
+  fill in the name, wood, measurements and price, and **Save**. About a minute later it's in the shop as JRC-025.
+  Leave the number blank and it gets the next free number automatically.
+- **Number used twice?** The newer piece is hidden from the shop and eBay, shows a **Problem** message in the stock manager,
+  and is listed under "Needs checking" on jrctimber.github.io/ebay.html until the number is corrected.
 - **Sold or reserved:** tap **Sold or reserved a piece** (in the menu or at the top of the Stock screen), type the stock number,
   choose Sold, Reserved, Available again or Remove from the site, and confirm.
 - **Edit a piece:** search by stock number, name or wood, open it, change it and **Save**.
@@ -28,7 +31,7 @@ Behind the scenes (`.github/workflows/site.yml` and `scripts/process_stock.py`) 
 gives new pieces a stock number, shrinks photos to 1600px with a 640px thumbnail and removes their location data,
 writes `stock.json` for the shop page, and republishes the site.
 
-Each piece is a small file in `_stock/`. The last number used is kept in `.stock-counter`, so numbers are never reused.
+Each piece is a small file in `_stock/`. The highest number used is kept in `.stock-counter` and `.stock-index.json` records which file owns each number.
 
 ## eBay
 
