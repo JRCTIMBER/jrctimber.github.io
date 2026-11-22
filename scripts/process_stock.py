@@ -212,7 +212,7 @@ def main():
     assign_numbers(entries)
     process_photos(entries)
     settings = ebay_export.load_settings()
-    links = shop_extras.stripe_sync(entries, settings, write_entry)
+    links = shop_extras.square_sync(entries, settings, write_entry)
     write_feed(entries, links)
     shop_extras.piece_pages(entries, links, settings)
     shop_extras.google_feed(entries, links, settings)

@@ -53,23 +53,27 @@ editable in Pages CMS under **eBay settings**):
 Upload the file in eBay **Seller Hub → Reports → Uploads**, then tick **Listed on eBay** on those pieces.
 Photo links use `site_url` in the eBay settings: change it to `https://jrctimber.co.uk` once the domain is switched.
 
-## Buying online (Stripe) and Google Shopping
+## Buying online (Square) and Google Shopping
 
 Each piece has its own page at `stock/jrc-025.html` (made automatically) with photos, details, **Buy now**,
 Reserve on WhatsApp, and Google product data (schema.org Product).
 
-**Buy now** appears for available pieces that have a photo, a length and a width, once a Stripe key is added:
-- Each piece gets its own Stripe payment link that stops after **one payment**, so it can't be sold twice online.
-- Postage at checkout follows the size bands (£5, £10, collection) plus free collection.
-- Links are turned off automatically when a piece is reserved, sold, removed, or its price or size changes
-  (a new link is made for the new price).
-- Every 15 minutes the automation checks Stripe for completed payments and marks those pieces **Sold**.
-  Stripe emails you the order with the buyer's address and postage choice.
-- Links are recorded in `.stripe-links.json`.
+**Buy now** appears for available pieces that have a photo, a length and a width, once a Square token is added:
+- Each piece gets its own Square payment link. Square's links take **one payment** only, so a piece can't be sold twice online.
+- The price includes postage for the size band (£5 or £10) and asks for the delivery address.
+  Collection-only pieces are paid for online and collected. Buyers who'd rather collect a piece that can be posted
+  reserve it on WhatsApp and pay at the yard.
+- Links are removed automatically when a piece is reserved, sold, removed, or its price or size changes
+  (a new link is made when it's available again or at the new price).
+- Every 15 minutes the automation checks Square for paid links and marks those pieces **Sold**.
+  The sale shows in your Square Dashboard and app (Orders) with the buyer's address. Buyers land on `thanks.html`.
+- Links are recorded in `.square-links.json`.
 
-To turn it on: in Stripe create a **restricted key** with Write access to Products, Prices, Shipping Rates and
-Payment Links, and Read access to Checkout Sessions. Add it in GitHub under
-Settings → Secrets and variables → Actions as `STRIPE_KEY`. Use a test key (`rk_test_…`) first, then a live key.
+To turn it on: at developer.squareup.com sign in with your Square account, create an application, open
+**Credentials**, switch to **Production** and copy the **Production access token**. Add it in GitHub under
+Settings → Secrets and variables → Actions as `SQUARE_TOKEN`. Payments go to your main Square location; to use
+another one add its ID as `SQUARE_LOCATION_ID`. To try it with Square's test cards first, use the Sandbox token
+and add a secret `SQUARE_ENV` set to `sandbox` (delete it and swap in the production token when done).
 
 **Google Shopping:** `google-products.xml` lists available pieces with Buy now, a photo and £5/£10 delivery.
 Add `https://jrctimber.co.uk/google-products.xml` in Google Merchant Center as a scheduled-fetch product source.

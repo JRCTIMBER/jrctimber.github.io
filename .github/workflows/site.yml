@@ -2,7 +2,7 @@ name: Update site
 
 # Runs after every change (including saves from Pages CMS), when the
 # "Sold or reserved a piece" button is used in Pages CMS, and every 15 minutes
-# to pick up pieces paid for online (Stripe). Scheduled runs only republish if something changed.
+# to pick up pieces paid for online (Square). Scheduled runs only republish if something changed.
 on:
   push:
     branches: [main]
@@ -44,7 +44,9 @@ jobs:
       - name: Stock numbers, sold pieces and photos
         env:
           PAYLOAD: ${{ inputs.payload }}
-          STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
+          SQUARE_TOKEN: ${{ secrets.SQUARE_TOKEN }}
+          SQUARE_LOCATION_ID: ${{ secrets.SQUARE_LOCATION_ID }}
+          SQUARE_ENV: ${{ secrets.SQUARE_ENV }}
         run: python scripts/process_stock.py
 
       - name: Save changes
@@ -52,7 +54,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A _stock img/stock stock .stock-counter .stock-index.json .stripe-links.json stock.json google-products.xml delivery.html ebay.csv ebay.html
+          git add -A _stock img/stock stock .stock-counter .stock-index.json .square-links.json stock.json google-products.xml delivery.html thanks.html ebay.csv ebay.html
           if git diff --cached --quiet; then
             changed=false
           else

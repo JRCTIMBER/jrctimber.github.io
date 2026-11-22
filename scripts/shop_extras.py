@@ -2,33 +2,32 @@
 
 Called from process_stock.py after stock numbers and photos are sorted:
 
-  stripe_sync(entries)   Creates a Stripe payment link for each available piece (one payment only),
-                         turns links off for reserved/sold/removed pieces, and marks pieces Sold
-                         when a payment link has been paid. Needs the STRIPE_KEY secret; without it
-                         this step is skipped and the site carries on with Reserve only.
+  square_sync(entries)   Creates a Square payment link for each available piece (Square's links take
+                         one payment only), removes links for reserved/sold/removed pieces, and marks
+                         pieces Sold once their link has been paid. Needs the SQUARE_TOKEN secret;
+                         without it this step is skipped and the site carries on with Reserve only.
   piece_pages(entries)   Writes stock/jrc-025.html etc. with photos, details, Buy now and Google
                          product data (schema.org Product).
   google_feed(entries)   Writes google-products.xml for Google Merchant Center (scheduled fetch).
 
-Links between pieces and Stripe are kept in .stripe-links.json:
-  {"JRC-025": {"id": "plink_...", "url": "https://buy.stripe.com/...", "amount": 17000, "band": "medium", "active": true}}
+Links between pieces and Square are kept in .square-links.json:
+  {"_location": "L...", "JRC-025": {"id": "...", "url": "https://square.link/u/...", "order_id": "...", "amount": 17000, "band": "medium"}}
 """
 import html
 import json
 import os
 import re
-import time
+import uuid
 from pathlib import Path
 from xml.sax.saxutils import escape as xml_escape
 
 import requests
 
 ROOT = Path(__file__).resolve().parent.parent
-LINKS = ROOT / ".stripe-links.json"
+LINKS = ROOT / ".square-links.json"
 PAGES = ROOT / "stock"
 FEED = ROOT / "google-products.xml"
 SHOP = ROOT / "shop.html"
-API = "https://api.stripe.com/v1"
 RETURN_DAYS = 14
 
 
@@ -116,104 +115,110 @@ def save_links(links):
     LINKS.write_text(json.dumps(links, indent=1, sort_keys=True) + "\n")
 
 
-# ---------- Stripe ----------
+# ---------- Square ----------
 
-def stripe(method, path, data=None):
-    key = os.environ.get("STRIPE_KEY", "").strip()
-    r = requests.request(method, API + path, auth=(key, ""), data=data if method == "POST" else None,
-                         params=data if method == "GET" else None, timeout=30)
+def square(method, path, data=None):
+    token = os.environ.get("SQUARE_TOKEN", "").strip()
+    host = "https://connect.squareupsandbox.com" if os.environ.get("SQUARE_ENV", "").strip().lower() == "sandbox" \
+        else "https://connect.squareup.com"
+    r = requests.request(method, host + "/v2" + path, json=data,
+                         headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}, timeout=30)
     if r.status_code >= 400:
-        raise RuntimeError(f"Stripe {method} {path}: {r.status_code} {r.text[:300]}")
-    return r.json()
+        raise RuntimeError(f"Square {method} {path}: {r.status_code} {r.text[:300]}")
+    return r.json() if r.text else {}
 
 
-def shipping_rates(links):
-    """Create the three postage options once and remember their ids."""
-    meta = links.setdefault("_rates", {})
-    wanted = {
-        "small": ("Tracked delivery (UK mainland)", 500),
-        "medium": ("Tracked delivery (UK mainland)", 1000),
-        "collection": ("Collect from our yard in Great Wigborough, Colchester (free)", 0),
-    }
-    for name, (label, amount) in wanted.items():
-        if name not in meta:
-            rate = stripe("POST", "/shipping_rates", {
-                "display_name": label, "type": "fixed_amount",
-                "fixed_amount[amount]": amount, "fixed_amount[currency]": "gbp",
-                "metadata[jrc]": name,
-            })
-            meta[name] = rate["id"]
-            print(f"Stripe: created postage option {name}")
-    return meta
+def location_id(links):
+    """The Square location payments go to: SQUARE_LOCATION_ID if set, otherwise the main location."""
+    loc = os.environ.get("SQUARE_LOCATION_ID", "").strip() or links.get("_location")
+    if not loc:
+        loc = square("GET", "/locations/main")["location"]["id"]
+        print("Square: using the main location")
+    links["_location"] = loc
+    return loc
 
 
-def create_link(d, b, rates, s):
+def create_link(d, b, loc, s):
     base = s["site_url"].rstrip("/")
     amount = int(round(num(d["price"]) * 100))
-    product = {"name": f"{d['ref']} {d['name']}", "metadata[ref]": d["ref"],
-               "description": ", ".join([d.get("wood", "")] + dims(d)).strip(", ") or d["name"],
-               "url": f"{base}/{page_path(d['ref'])}"}
-    for i, u in enumerate(photo_urls(d, base)[:8]):
-        product[f"images[{i}]"] = u
-    prod = stripe("POST", "/products", product)
-    price = stripe("POST", "/prices", {"product": prod["id"], "unit_amount": amount, "currency": "gbp"})
-    data = {
-        "line_items[0][price]": price["id"], "line_items[0][quantity]": 1,
-        "restrictions[completed_sessions][limit]": 1,
-        "inactive_message": f"Sorry, {d['ref']} has sold or is reserved. Call or WhatsApp 07596 836838 for similar pieces.",
-        "phone_number_collection[enabled]": "true",
-        "metadata[ref]": d["ref"],
-        "after_completion[type]": "hosted_confirmation",
-        "after_completion[hosted_confirmation][custom_message]":
-            f"Thank you! {d['ref']} is yours. We'll be in touch within a day to arrange delivery or collection. "
-            "Questions? Call or WhatsApp 07596 836838.",
+    desc = ", ".join([d.get("wood", "")] + dims(d)).strip(", ")
+    options = {
+        "redirect_url": f"{base}/thanks.html",
+        "merchant_support_email": "info@jrctimber.co.uk",
+        "ask_for_shipping_address": b != "collection",
     }
-    options = ([b] if b != "collection" else []) + ["collection"]
-    for i, o in enumerate(options):
-        data[f"shipping_options[{i}][shipping_rate]"] = rates[o]
-    if b != "collection":
-        data["shipping_address_collection[allowed_countries][0]"] = "GB"
-    link = stripe("POST", "/payment_links", data)
-    print(f"Stripe: payment link for {d['ref']} ({BAND_LABEL[b]}, £{fmt(amount / 100)})")
-    return {"id": link["id"], "url": link["url"], "amount": amount, "band": b, "active": True}
+    if BAND_PRICE[b] is not None:
+        options["shipping_fee"] = {"name": "Tracked delivery (UK mainland)",
+                                   "charge": {"amount": BAND_PRICE[b], "currency": "GBP"}}
+    body = {
+        "idempotency_key": str(uuid.uuid4()),
+        "description": f"{d['ref']} {d['name']}",
+        "order": {
+            "location_id": loc,
+            "reference_id": d["ref"],
+            "line_items": [{
+                "name": f"{d['ref']} {d['name']}"[:500],
+                "quantity": "1",
+                "base_price_money": {"amount": amount, "currency": "GBP"},
+                "note": (desc + (" – collection from Great Wigborough, Colchester" if b == "collection" else ""))[:2000],
+            }],
+            "metadata": {"ref": d["ref"]},
+        },
+        "checkout_options": options,
+        "payment_note": d["ref"],
+    }
+    link = square("POST", "/online-checkout/payment-links", body)["payment_link"]
+    print(f"Square: payment link for {d['ref']} ({BAND_LABEL[b]}, £{fmt(amount / 100)})")
+    return {"id": link["id"], "url": link["url"], "order_id": link["order_id"], "amount": amount, "band": b}
 
 
-def set_active(rec, active, ref):
-    if rec.get("active") == active:
+def remove_link(links, ref):
+    """Delete a piece's payment link (Square can't switch one off and on again; a new one is made if needed)."""
+    rec = links.get(ref)
+    if not rec:
         return
     try:
-        stripe("POST", f"/payment_links/{rec['id']}", {"active": "true" if active else "false"})
+        square("DELETE", f"/online-checkout/payment-links/{rec['id']}")
+        print(f"Square: link for {ref} removed")
     except RuntimeError as e:
-        print(f"Stripe: couldn't {'turn on' if active else 'turn off'} link for {ref}: {e}")
-        if active:
+        if " 404 " not in str(e):
+            print(f"Square: couldn't remove link for {ref}, will retry: {e}")
             return
-    rec["active"] = active
-    print(f"Stripe: link for {ref} turned {'on' if active else 'off'}")
+    links.pop(ref, None)
 
 
-def stripe_sync(entries, s, write_entry):
+def paid_orders(links):
+    """Order ids that have been paid. Square links are single-use, so a paid link can't be paid again."""
+    ids = [rec["order_id"] for ref, rec in links.items() if not ref.startswith("_") and rec.get("order_id")]
+    paid = set()
+    for i in range(0, len(ids), 100):
+        res = square("POST", "/orders/batch-retrieve", {"location_id": links["_location"], "order_ids": ids[i:i + 100]})
+        for o in res.get("orders", []):
+            if o.get("state") in ("OPEN", "COMPLETED"):
+                paid.add(o["id"])
+    return paid
+
+
+def square_sync(entries, s, write_entry):
     links = load_links()
-    if not os.environ.get("STRIPE_KEY", "").strip():
-        print("Stripe: no STRIPE_KEY set, skipping online payments")
+    if not os.environ.get("SQUARE_TOKEN", "").strip():
+        print("Square: no SQUARE_TOKEN set, skipping online payments")
         save_links(links)
         return links
     try:
-        # 1. Anything paid for in the last 3 days becomes Sold
-        by_link = {rec["id"]: ref for ref, rec in links.items() if not ref.startswith("_")}
-        since = int(time.time()) - 3 * 86400
-        page = stripe("GET", "/checkout/sessions", {"status": "complete", "limit": 100, "created[gte]": since})
-        for sess in page.get("data", []):
-            ref = by_link.get(sess.get("payment_link"))
-            if not ref or sess.get("payment_status") not in ("paid", "no_payment_required"):
+        loc = location_id(links)
+        # 1. Paid links: mark the piece Sold and forget the link
+        paid = paid_orders(links)
+        for ref, rec in list(links.items()):
+            if ref.startswith("_") or rec.get("order_id") not in paid:
                 continue
+            links.pop(ref)
             for path, d, body in entries:
                 if d.get("ref") == ref and status(d) != "sold":
                     d["status"] = "Sold"
                     write_entry(path, d, body)
-                    links[ref]["active"] = False
                     print(f"Sold online: {ref} ({d.get('name')})")
         # 2. Links follow each piece's status, price and postage band
-        rates = shipping_rates(links)
         live_refs = set()
         for path, d, body in entries:
             if not is_live(d):
@@ -226,31 +231,29 @@ def stripe_sync(entries, s, write_entry):
             want = (status(d) == "available" and price and price > 0 and d.get("photos")
                     and num(d.get("length")) and num(d.get("width")))
             if not want:
-                if rec:
-                    set_active(rec, False, ref)
+                remove_link(links, ref)
                 continue
             b = band(d, s)
             amount = int(round(price * 100))
             if rec and rec["amount"] == amount and rec["band"] == b:
-                set_active(rec, True, ref)
-                if rec.get("active"):
-                    continue
+                continue
             if rec:
-                set_active(rec, False, ref)
-            links[ref] = create_link(d, b, rates, s)
+                remove_link(links, ref)
+                if ref in links:
+                    continue  # couldn't remove the old link; try again next run
+            links[ref] = create_link(d, b, loc, s)
         # 3. Pieces removed from the site
-        for ref, rec in links.items():
-            if not ref.startswith("_") and ref not in live_refs:
-                set_active(rec, False, ref)
-    except (RuntimeError, requests.RequestException) as e:
-        print(f"Stripe: stopped early, will retry next run: {e}")
+        for ref in [r for r in links if not r.startswith("_") and r not in live_refs]:
+            remove_link(links, ref)
+    except (RuntimeError, requests.RequestException, KeyError) as e:
+        print(f"Square: stopped early, will retry next run: {e}")
     save_links(links)
     return links
 
 
 def buy_url(d, links):
     rec = links.get(d.get("ref") or "")
-    if rec and rec.get("active") and status(d) == "available":
+    if rec and status(d) == "available":
         return rec["url"]
     return ""
 
@@ -314,8 +317,11 @@ def piece_html(d, links, s, base, head, foot):
     elif st == "reserved":
         actions = f"<p class='pp-sold'>This piece is reserved.</p><a class='btn btn-outline' href='{e(wa)}' target='_blank' rel='noopener'>Ask about similar pieces</a>"
     else:
-        actions = (f"<a class='btn btn-wood pp-buy' href='{e(url)}'>Buy now – £{fmt(price)}</a>" if url else "") + \
+        extra = f" + £{fmt(BAND_PRICE[b] / 100)} delivery" if BAND_PRICE[b] is not None else " – collect from our yard"
+        actions = (f"<a class='btn btn-wood pp-buy' href='{e(url)}'>Buy now – £{fmt(price)}{extra}</a>" if url else "") + \
                   f"<a class='btn {'btn-outline' if url else 'btn-dark'}' href='{e(wa)}' target='_blank' rel='noopener'><svg><use href='#i-chat'/></svg>Reserve on WhatsApp</a>"
+        if url and BAND_PRICE[b] is not None:
+            actions += "<p class='pp-small'>Collecting from the yard instead? Reserve on WhatsApp and pay by card or cash when you collect.</p>"
     gallery = ""
     if full:
         thumbs = "".join(f"<button type='button' data-src='{e(p)}' aria-label='Photo {i + 1}'><img src='{e(thumb_of(p))}' alt=''></button>"
@@ -383,7 +389,7 @@ def piece_html(d, links, s, base, head, foot):
         {note}{rough}
         <div class="pp-acts">{actions}</div>
         <table class="pp-table">{table}</table>
-        <p class="pp-small">Every piece is one of a kind and the photos show this exact piece. Card payments are handled securely by Stripe. See <a href="delivery.html">delivery &amp; returns</a>.</p>
+        <p class="pp-small">Every piece is one of a kind and the photos show this exact piece. Card payments are handled securely by Square. See <a href="delivery.html">delivery &amp; returns</a>.</p>
       </div>
     </div>
   </div>
@@ -481,13 +487,13 @@ def delivery_page(s):
       <tr><td>Up to {ml}cm long and {mw}cm wide</td><td>£10 tracked delivery</td></tr>
       <tr><td>Larger pieces</td><td>Collection, or ask us for a delivery quote</td></tr>
     </table>
-    <p>We deliver to UK mainland addresses and aim to send pieces within {days} working days of payment. The delivery option for each piece is shown on its page and at checkout.</p>
+    <p>We deliver to UK mainland addresses and aim to send pieces within {days} working days of payment. The delivery price for each piece is shown on its page and at checkout.</p>
 
     <h2>Collection</h2>
     <p>Collection from our yard is always free: Layer Road, Great Wigborough, Colchester CO5 7RP. Visits are by appointment, 7 days a week. Call or WhatsApp <a href="tel:+447596836838">07596 836838</a> to arrange a time.</p>
 
     <h2>Paying</h2>
-    <p>Pieces with a Buy now button can be paid for online by card. Payments are handled securely by Stripe and we never see your card details. You can also reserve a piece on WhatsApp or by phone and pay on collection. Prices are in pounds sterling.</p>
+    <p>Pieces with a Buy now button can be paid for online by card, Apple Pay or Google Pay. Buy now includes delivery where the piece can be sent. Payments are handled securely by Square and we never see your card details. To collect instead, reserve a piece on WhatsApp or by phone and pay by card or cash at the yard. Prices are in pounds sterling.</p>
 
     <h2>Returns</h2>
     <p>If you buy online and change your mind, tell us within {RETURN_DAYS} days of receiving your piece, then return it within a further {RETURN_DAYS} days in the condition you received it. We'll refund the price of the piece and the standard delivery charge within {RETURN_DAYS} days of getting it back. Return postage is paid by you unless the piece is faulty or not as described.</p>
@@ -501,6 +507,31 @@ def delivery_page(s):
 
     <h2>Contact</h2>
     <p>JRC Timber, run by Josh Cook. Layer Road, Great Wigborough, Colchester CO5 7RP. <a href="tel:+447596836838">07596 836838</a> · <a href="mailto:info@jrctimber.co.uk">info@jrctimber.co.uk</a></p>
+  </div>
+</section>
+</main>{foot}<script src="site.js"></script>
+</body>
+</html>
+""", encoding="utf-8")
+    (ROOT / "thanks.html").write_text(f"""<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thank you | JRC Timber</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="favicon.png">
+<meta name="theme-color" content="#365347">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Questrial&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>{head}<main>
+<section class="band">
+  <div class="wrap doc">
+    <h1>Thank you, the piece is yours</h1>
+    <p>Your payment has gone through and Square has emailed you a receipt. We'll be in touch within a day to arrange delivery or collection.</p>
+    <p>Questions? Call or WhatsApp <a href="tel:+447596836838">07596 836838</a> or email <a href="mailto:info@jrctimber.co.uk">info@jrctimber.co.uk</a>.</p>
+    <p><a class="btn btn-dark" href="shop.html">Back to the shop</a></p>
   </div>
 </section>
 </main>{foot}<script src="site.js"></script>
