@@ -1,18 +1,18 @@
 [
  {
   "ref": "JRC-001",
-  "name": "Characterful walnut board",
-  "wood": "Walnut",
+  "name": "Test",
+  "wood": "Ash",
   "length": null,
   "width": null,
   "width_min": null,
   "thickness": null,
   "dried": null,
   "finish": null,
-  "price": 200,
+  "price": 1,
   "was": null,
   "status": "Available",
-  "note": "Ideal for resin projects",
+  "note": null,
   "photos": [],
   "url": "stock/jrc-001.html",
   "buy": ""
