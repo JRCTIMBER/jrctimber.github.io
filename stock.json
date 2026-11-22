@@ -16,5 +16,25 @@
   "photos": [],
   "url": "stock/jrc-001.html",
   "buy": ""
+ },
+ {
+  "ref": "JRC-025",
+  "name": "Test 2",
+  "wood": "Redwood",
+  "length": 3,
+  "width": 1000,
+  "width_min": null,
+  "thickness": 60,
+  "dried": "Kiln dried",
+  "finish": "Finished",
+  "price": 2,
+  "was": 1,
+  "status": "Available",
+  "note": null,
+  "photos": [
+   "/img/stock/mwsc73m9-u0ok4kim.jpg"
+  ],
+  "url": "stock/jrc-025.html",
+  "buy": "https://square.link/u/lcYxaewu"
  }
 ]
