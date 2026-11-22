@@ -3,7 +3,7 @@
   "ref": "JRC-001",
   "name": "Test",
   "wood": "Ash",
-  "length": 0,
+  "length": 1.8,
   "width": 600,
   "width_min": 500,
   "thickness": 45,
@@ -13,9 +13,11 @@
   "was": null,
   "status": "Available",
   "note": null,
-  "photos": [],
+  "photos": [
+   "/img/stock/mwsc3ckw-4b70vukd.jpg"
+  ],
   "url": "stock/jrc-001.html",
-  "buy": ""
+  "buy": "https://square.link/u/ClBzOkEy"
  },
  {
   "ref": "JRC-025",
