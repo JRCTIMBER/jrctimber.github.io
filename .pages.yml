@@ -58,6 +58,7 @@ content:
         description: "e.g. 2.45"
         options:
           min: 0
+          step: 0.01
       - name: width
         label: Width at widest (mm)
         type: number
@@ -91,12 +92,14 @@ content:
         required: true
         options:
           min: 0
+          step: 0.01
       - name: was
         label: Was price (£)
         type: number
         description: Only if it's reduced. Shows a "Reduced" tag.
         options:
           min: 0
+          step: 0.01
       - name: status
         label: Status
         type: select
@@ -132,6 +135,8 @@ content:
       - name: small_max_length_m
         label: Small parcel - max length (m)
         type: number
+        options:
+          step: 0.01
       - name: small_max_width_mm
         label: Small parcel - max width (mm)
         type: number
@@ -141,6 +146,8 @@ content:
       - name: medium_max_length_m
         label: Large parcel - max length (m)
         type: number
+        options:
+          step: 0.01
       - name: medium_max_width_mm
         label: Large parcel - max width (mm)
         type: number
