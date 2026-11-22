@@ -29,6 +29,33 @@
     }
   }
 
+  // Links to a section (#contact, #enq ...): content above can still grow while the page scrolls
+  // (the Google reviews box loads late), so check where the section is once the scroll stops
+  // and finish the job if it moved.
+  const land = (id, smooth) => {
+    const el = document.getElementById(id);
+    if (!el) return false;
+    let tries = 0;
+    const go = s => el.scrollIntoView({behavior: s && !calm ? "smooth" : "auto", block: "start"});
+    const check = () => {
+      const off = Math.abs(el.getBoundingClientRect().top - (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0));
+      if (off > 3 && tries++ < 4) { go(false); setTimeout(check, 250); }
+    };
+    go(smooth);
+    let t; const done = () => { clearTimeout(t); t = setTimeout(() => { removeEventListener("scroll", done); check(); }, 180); };
+    addEventListener("scroll", done, {passive: true}); done();
+    return true;
+  };
+  window.jrcLand = land;
+  document.addEventListener("click", e => {
+    const a = e.target.closest('a[href*="#"]');
+    if (!a || a.origin !== location.origin || a.pathname !== location.pathname) return;
+    const id = decodeURIComponent(a.hash.slice(1));
+    if (id && document.getElementById(id)) { e.preventDefault(); history.pushState(null, "", "#" + id); land(id, true); }
+  });
+  // Arriving from another page with a #section in the address
+  if (location.hash.length > 1) addEventListener("load", () => setTimeout(() => land(decodeURIComponent(location.hash.slice(1)), false), 300));
+
   const yr = document.getElementById("yr");
   if (yr) yr.textContent = new Date().getFullYear();
 }
