@@ -215,7 +215,7 @@
       stock = rows.filter(p => p && p.name).map(p => ({...p,
         length: num(p.length), width: num(p.width), width_min: num(p.width_min), thickness: num(p.thickness),
         dried: p.dried || "", finish: p.finish || "", note: p.note || "", photos: p.photos || [],
-        url: p.url || "", buy: p.buy || "", price: Number(p.price) || 0, was: Number(p.was) || 0, status: String(p.status || "available").toLowerCase()}));
+        url: p.url || "", buy: p.buy || "", price: Number(p.price) || 0, was: Number(p.was) > Number(p.price) ? Number(p.was) : 0, status: String(p.status || "available").toLowerCase()}));
       drawChips(); render();
     })
     .catch(() => { count.textContent = "Sorry, the stock list didn't load. Call or WhatsApp 07596 836838 and we'll tell you what's in."; });

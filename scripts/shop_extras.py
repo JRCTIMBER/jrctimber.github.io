@@ -290,6 +290,8 @@ def piece_html(d, links, s, base, head, foot):
     ref, st = d["ref"], status(d)
     price = num(d.get("price")) or 0
     was = num(d.get("was"))
+    if not was or was <= price:
+        was = None
     b = band(d, s)
     url = buy_url(d, links)
     photos = d.get("photos") or []
