@@ -1,0 +1,17 @@
+# Price list (editable in Pages CMS under "Price list"). Prices are per cubic metre (m³).
+green_rough_sawn: 1500
+unplaned_narrow: 2300
+unplaned_wide: 4300
+unplaned_wide_from_mm: 700
+live_one_side: 3500
+live_one_side_max_mm: 700
+live_both_narrow: 3000
+live_both_narrow_max_mm: 700
+live_both_mid: 5750
+live_both_mid_max_mm: 1000
+live_both_wide: 7000
+straight_narrow: 4000
+straight_narrow_max_mm: 300
+straight_wide: 4500
+special_woods: [Walnut]
+special_multiplier: 1.5

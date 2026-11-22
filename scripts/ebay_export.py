@@ -18,6 +18,8 @@ from pathlib import Path
 
 import yaml
 
+from pricing import price_of
+
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = Path(__file__).resolve().parent / "ebay_template.csv"
 SETTINGS = ROOT / "_data" / "ebay.yml"
@@ -68,6 +70,8 @@ def why_not(d, s):
         return "needs a width"
     if not d.get("photos"):
         return "needs at least one photo"
+    if not price_of(d):
+        return "needs a price"
     return ""
 
 
@@ -150,7 +154,7 @@ def row(d, header, s):
         "*Description": describe(d, policy_label, s),
         "*Format": "FixedPrice",
         "*Duration": "GTC",
-        "*StartPrice": fmt(num(d["price"])),
+        "*StartPrice": fmt(price_of(d)),
         "*Quantity": "1",
         "*Location": s["location"],
         "*DispatchTimeMax": str(s.get("dispatch_days", 3)),
@@ -197,7 +201,7 @@ def build(entries):
 
 def write_page(lines, waiting, problems=()):
     def li(d, extra):
-        return f"<tr><td class='nw'>{html.escape(d['ref'])}</td><td>{html.escape(d['name'])}</td><td class='nw'>£{fmt(num(d['price']))}</td><td>{html.escape(extra)}</td></tr>"
+        return f"<tr><td class='nw'>{html.escape(d['ref'])}</td><td>{html.escape(d['name'])}</td><td class='nw'>{'£' + fmt(price_of(d)) if price_of(d) else '–'}</td><td>{html.escape(extra)}</td></tr>"
     ready = "".join(li(d, label) for d, label in lines) or "<tr><td colspan='4'>Nothing new to list right now.</td></tr>"
     todo = "".join(li(d, why) for d, why in waiting)
     probs = "".join(f"<tr><td class='nw'>{html.escape(str(d.get('ref') or ''))}</td><td>{html.escape(d['name'])}</td><td colspan='2'>{html.escape(why)}</td></tr>" for d, why in problems)

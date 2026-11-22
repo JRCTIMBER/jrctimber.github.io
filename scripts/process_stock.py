@@ -4,6 +4,7 @@ Runs in GitHub Actions (.github/workflows/site.yml):
   1. Applies the "Sold or reserved a piece" button from Pages CMS, if that's what started the run.
   2. Gives every new piece the next stock number (JRC-025, JRC-026, ...).
   3. Shrinks new photos, removes their location data and makes a small thumbnail for the shop.
+  3b. Works out each piece's price from the price list (pricing.py).
   4. Writes stock.json, which the shop page reads.
   5. Writes ebay.csv and ebay.html for pieces that can go on eBay (see ebay_export.py).
 """
@@ -18,6 +19,7 @@ from PIL import Image, ImageOps
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import ebay_export  # noqa: E402
+import pricing  # noqa: E402
 import shop_extras  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -198,6 +200,7 @@ def write_feed(entries, links=None):
             continue
         item = {k: data.get(k) for k in FEED_FIELDS}
         item["photos"] = [str(x) for x in (item["photos"] or [])]
+        item["price"] = pricing.price_of(data)
         item["url"] = shop_extras.page_path(data["ref"])
         item["buy"] = shop_extras.buy_url(data, links)
         items.append(item)
@@ -211,6 +214,7 @@ def main():
     apply_cms_button(entries)
     assign_numbers(entries)
     process_photos(entries)
+    pricing.apply(entries, write_entry)
     settings = ebay_export.load_settings()
     links = shop_extras.square_sync(entries, settings, write_entry)
     write_feed(entries, links)

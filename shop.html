@@ -109,7 +109,7 @@
     Hornbeam: ["#e2d5b8", "#bba98a"], "London plane": ["#c99b78", "#9b6c4b"], Poplar: ["#e3d6b2", "#bcae85"]
   };
   const esc = t => String(t).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
-  const money = n => "£" + Number(n).toLocaleString("en-GB");
+  const money = n => Number(n) > 0 ? "£" + Number(n).toLocaleString("en-GB") : "Price on request";
 
   // "/img/stock/abc.jpg" -> "img/stock/abc.jpg", and its small version for the shop grid
   const full = p => String(p).replace(/^\//, "");
@@ -157,7 +157,7 @@
   function render() {
     let rows = stock.map((p, i) => ({...p, i})).filter(p => wood === "All" || p.wood === wood);
     const v = sortSel.value;
-    if (v === "lo") rows.sort((a, b) => a.price - b.price);
+    if (v === "lo") rows.sort((a, b) => (a.price || 1e9) - (b.price || 1e9));
     if (v === "hi") rows.sort((a, b) => b.price - a.price);
     if (v === "len") rows.sort((a, b) => metres(b.length) - metres(a.length));
     const avail = rows.filter(p => p.status !== "sold").length;
@@ -166,7 +166,7 @@
     list.innerHTML = rows.length ? rows.map((p, n) => {
       const dims = specs(p);
       const label = `${p.ref ? p.ref + ", " : ""}${p.name}${p.length ? " (" + withUnit(p.length, "m") + ")" : ""}`;
-      const msg = encodeURIComponent(`Hi JRC Timber, is ${p.ref ? "piece " + p.ref + ", the " : "the "}${p.name}${p.length ? " (" + withUnit(p.length, "m") + ")" : ""}, ${money(p.price)}, still available?`);
+      const msg = encodeURIComponent(`Hi JRC Timber, is ${p.ref ? "piece " + p.ref + ", the " : "the "}${p.name}${p.length ? " (" + withUnit(p.length, "m") + ")" : ""}${p.price ? ", " + money(p.price) : ""}, still available?`);
       const sold = p.status === "sold", reserved = p.status === "reserved";
       const tag = sold ? '<span class="tag sold">Sold</span>' : reserved ? '<span class="tag">Reserved</span>' : p.was ? '<span class="tag">Reduced</span>' : "";
       const ph = p.photos || [];

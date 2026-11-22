@@ -23,6 +23,8 @@ from xml.sax.saxutils import escape as xml_escape
 
 import requests
 
+from pricing import price_of
+
 ROOT = Path(__file__).resolve().parent.parent
 LINKS = ROOT / ".square-links.json"
 PAGES = ROOT / "stock"
@@ -140,7 +142,7 @@ def location_id(links):
 
 def create_link(d, b, loc, s):
     base = s["site_url"].rstrip("/")
-    amount = int(round(num(d["price"]) * 100))
+    amount = int(round(price_of(d) * 100))
     desc = ", ".join([d.get("wood", "")] + dims(d)).strip(", ")
     options = {
         "redirect_url": f"{base}/thanks.html",
@@ -226,7 +228,7 @@ def square_sync(entries, s, write_entry):
             ref = d["ref"]
             live_refs.add(ref)
             rec = links.get(ref)
-            price = num(d.get("price"))
+            price = price_of(d)
             # Buy now only for pieces people can see and measure: a photo, a length and a width
             want = (status(d) == "available" and price and price > 0 and d.get("photos")
                     and num(d.get("length")) and num(d.get("width")))
@@ -288,10 +290,11 @@ def piece_pages(entries, links, s):
 def piece_html(d, links, s, base, head, foot):
     e = html.escape
     ref, st = d["ref"], status(d)
-    price = num(d.get("price")) or 0
+    price = price_of(d)
     was = num(d.get("was"))
-    if not was or was <= price:
+    if not was or not price or was <= price:
         was = None
+    ptxt = f"£{fmt(price)}" if price else "Price on request"
     b = band(d, s)
     url = buy_url(d, links)
     photos = d.get("photos") or []
@@ -312,7 +315,7 @@ def piece_html(d, links, s, base, head, foot):
         rows.append(("Finish", d["finish"]))
     rows.append(("Delivery", BAND_LABEL[b] + (", or free collection" if b != "collection" else " from Great Wigborough, Colchester")))
     table = "".join(f"<tr><th>{e(k)}</th><td>{e(str(v))}</td></tr>" for k, v in rows)
-    msg = f"Hi JRC Timber, is piece {ref}, the {d['name']}, £{fmt(price)}, still available?"
+    msg = f"Hi JRC Timber, is piece {ref}, the {d['name']}{', £' + fmt(price) if price else ''}, still available?"
     wa = "https://wa.me/447596836838?text=" + requests.utils.quote(msg)
     if st == "sold":
         actions = "<p class='pp-sold'>This piece has sold. Call or WhatsApp us for similar pieces.</p>"
@@ -333,7 +336,7 @@ def piece_html(d, links, s, base, head, foot):
         gallery = "<div class='pp-pics pp-none'><p>Photos coming soon. Ask us on WhatsApp and we'll send some.</p></div>"
     availability = {"available": "InStock", "reserved": "OutOfStock", "sold": "SoldOut"}.get(st, "InStock")
     offer = {
-        "@type": "Offer", "url": page_url, "price": f"{price:.2f}", "priceCurrency": "GBP",
+        "@type": "Offer", "url": page_url, "price": f"{(price or 0):.2f}", "priceCurrency": "GBP",
         "availability": f"https://schema.org/{availability}", "itemCondition": "https://schema.org/NewCondition",
         "seller": {"@type": "Organization", "name": "JRC Timber"},
         "hasMerchantReturnPolicy": {
@@ -352,11 +355,13 @@ def piece_html(d, links, s, base, head, foot):
                              "transitTime": {"@type": "QuantitativeValue", "minValue": 1, "maxValue": 3, "unitCode": "DAY"}}}
     product = {"@context": "https://schema.org/", "@type": "Product", "name": f"{d['name']} ({ref})", "sku": ref,
                "description": long_title(d) + (f". {d['note']}" if d.get("note") else ""),
-               "brand": {"@type": "Brand", "name": "JRC Timber"}, "material": d.get("wood", ""), "offers": offer}
+               "brand": {"@type": "Brand", "name": "JRC Timber"}, "material": d.get("wood", "")}
+    if price:
+        product["offers"] = offer
     if abs_photos:
         product["image"] = abs_photos
     ld = json.dumps(product, ensure_ascii=False).replace("</", "<\\/")
-    price_html = f"£{fmt(price)}" + (f" <s>£{fmt(was)}</s>" if was else "")
+    price_html = ptxt + (f" <s>£{fmt(was)}</s>" if was else "")
     note = f"<p class='pp-note'>{e(d['note'])}</p>" if d.get("note") else ""
     rough = "<p class='pp-note'>Can be flattened or planed for you before collection or delivery.</p>" if re.search(r"rough|sawn", str(d.get("finish") or ""), re.I) else ""
     return f"""<!DOCTYPE html>
@@ -366,10 +371,10 @@ def piece_html(d, links, s, base, head, foot):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <base href="../">
 <title>{e(d['name'])} {e(ref)} | JRC Timber</title>
-<meta name="description" content="{e(long_title(d))}. £{fmt(price)}. Local Essex timber from JRC Timber, Colchester.">
+<meta name="description" content="{e(long_title(d))}. {ptxt}. Local Essex timber from JRC Timber, Colchester.">
 <link rel="canonical" href="{e(page_url)}">
 <link rel="icon" href="favicon.png">
-<meta property="og:title" content="{e(d['name'])} ({e(ref)}) – £{fmt(price)}">
+<meta property="og:title" content="{e(d['name'])} ({e(ref)}) – {ptxt}">
 {f'<meta property="og:image" content="{e(abs_photos[0])}">' if abs_photos else ''}
 <meta name="theme-color" content="#365347">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -421,7 +426,9 @@ def google_feed(entries, links, s):
         photos = photo_urls(d, base)
         if not url or not photos or BAND_PRICE[b] is None:
             continue
-        price = num(d["price"])
+        price = price_of(d)
+        if not price:
+            continue
         x = lambda t: xml_escape(str(t))
         extra = "".join(f"<g:additional_image_link>{x(p)}</g:additional_image_link>" for p in photos[1:10])
         sale = ""

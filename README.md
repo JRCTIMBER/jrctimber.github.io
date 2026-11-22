@@ -53,6 +53,20 @@ editable in Pages CMS under **eBay settings**):
 Upload the file in eBay **Seller Hub → Reports → Uploads**, then tick **Listed on eBay** on those pieces.
 Photo links use `site_url` in the eBay settings: change it to `https://jrctimber.co.uk` once the domain is switched.
 
+## Prices (worked out from the price list)
+
+Each piece's price is worked out from `_data/prices.yml` (edit it in Pages CMS under **Price list**):
+length × width × thickness in metres × the price per m³, rounded to £1.
+- Finish **Rough sawn** uses the unplaned prices by width, or green timber if Drying is **Fresh sawn**.
+- Finish **Flattened, Planed, Sanded or Finished** uses the planed prices by **Edges** and width.
+  Live edge one side over 700mm isn't on the list, so it uses the live edge both sides prices.
+- Width is the **widest** point. Walnut (and any wood in the special list, or a piece with
+  **Special timber** ticked) is × 1.5. Over 1m wide uses the £7,000 "from" price.
+- The result and the working show on the piece as **Price from your price list**. Type a price in
+  **Your price** to use that instead; clear it to go back to the list price.
+- A piece with no thickness or finish and no price of your own shows **Price on request**, with no Buy now,
+  and stays out of the eBay file and Google feed.
+
 ## Buying online (Square) and Google Shopping
 
 Each piece has its own page at `stock/jrc-025.html` (made automatically) with photos, details, **Buy now**,
