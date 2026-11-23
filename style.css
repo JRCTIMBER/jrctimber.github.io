@@ -91,9 +91,6 @@ dialog button{background:#fff;border:0;border-radius:999px;min-height:44px;paddi
 .about figcaption{background:var(--soft);border-radius:0 0 8px 8px;padding:10px 14px;font-size:15px;color:var(--muted)}
 .about .txt{display:flex;flex-direction:column;gap:18px}
 .about .txt p{color:var(--muted)}
-.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:8px}
-.facts div{border-top:2px solid var(--wood);padding-top:10px;font-size:15px;color:var(--muted)}
-.facts b{display:block;font-family:"Libre Baskerville",Georgia,serif;font-size:19px;color:var(--ink)}
 
 /* reviews */
 .reviews{background:var(--soft)}
@@ -172,7 +169,7 @@ footer .cols{display:flex;flex-wrap:wrap;gap:8px 32px}
   .svc h3{font-size:18px}
   .svc button{min-height:40px}
   .gal{gap:6px}
-  .row,.facts{grid-template-columns:minmax(0,1fr)}
+  .row{grid-template-columns:minmax(0,1fr)}
   .ctas{display:none}
   .bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--deep);padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))}
   .bar a{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border-radius:10px;text-decoration:none;color:#fff;background:var(--forest);font-size:16px}
