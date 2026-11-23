@@ -72,6 +72,15 @@ jobs:
       - if: steps.save.outputs.publish == 'true'
         uses: actions/configure-pages@v5
 
+      # Tag the style and script files with this version so phones load the new ones straight away
+      # instead of a saved old copy (only in what gets published, not in the repo).
+      - if: steps.save.outputs.publish == 'true'
+        name: Version style and script links
+        run: |
+          v=$(git rev-parse --short HEAD)
+          find . -name '*.html' -not -path './_site/*' -not -path './.git/*' -print0 | \
+            xargs -0 sed -i -E "s#(href=\"[^\"]*style\.css)\"#\1?v=$v\"#g; s#(src=\"[^\"]*site\.js)\"#\1?v=$v\"#g"
+
       - if: steps.save.outputs.publish == 'true'
         uses: actions/jekyll-build-pages@v1
         with:
