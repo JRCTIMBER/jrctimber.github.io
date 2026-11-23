@@ -99,8 +99,8 @@ def describe(d, policy_label, s):
     note = f"<p>{html.escape(d['note'])}</p>" if d.get("note") else ""
     return (
         f"<h2>{html.escape(d['name'])}</h2>{note}<table>{table}</table>"
-        "<p>Cut from a local Essex tree and milled by JRC Timber near Colchester. Every piece is one of a kind, "
-        "and the photos show the actual piece you'll receive.</p>"
+        "<p>Cut from a local Essex tree and milled by JRC Timber near Colchester. The photos show "
+        "the actual piece you'll receive.</p>"
         "<p>We can also flatten, plane or cut pieces to size. Collection is welcome by appointment. "
         f"Please quote stock number {html.escape(d['ref'])} if you message us.</p>"
     )

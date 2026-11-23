@@ -322,7 +322,7 @@ def piece_html(d, links, s, base, head, foot):
     elif st == "reserved":
         actions = f"<p class='pp-sold'>This piece is reserved.</p><a class='btn btn-outline' href='{e(wa)}' target='_blank' rel='noopener'>Ask about similar pieces</a>"
     else:
-        extra = f" + £{fmt(BAND_PRICE[b] / 100)} delivery" if BAND_PRICE[b] is not None else " – collect from our yard"
+        extra = f" + £{fmt(BAND_PRICE[b] / 100)} delivery" if BAND_PRICE[b] is not None else ", collection only"
         actions = (f"<a class='btn btn-wood pp-buy' href='{e(url)}'>Buy now – £{fmt(price)}{extra}</a>" if url else "") + \
                   f"<a class='btn {'btn-outline' if url else 'btn-dark'}' href='{e(wa)}' target='_blank' rel='noopener'><svg><use href='#i-chat'/></svg>Reserve on WhatsApp</a>"
         if url and BAND_PRICE[b] is not None:
@@ -396,7 +396,7 @@ def piece_html(d, links, s, base, head, foot):
         {note}{rough}
         <div class="pp-acts">{actions}</div>
         <table class="pp-table">{table}</table>
-        <p class="pp-small">Every piece is one of a kind and the photos show this exact piece. Card payments are handled securely by Square. See <a href="delivery.html">delivery &amp; returns</a>.</p>
+        <p class="pp-small">The photos show this exact piece. Card payments are handled by Square. See <a href="delivery.html">delivery &amp; returns</a>.</p>
       </div>
     </div>
   </div>
@@ -509,7 +509,7 @@ def delivery_page(s):
     <p>Pieces you've seen and collected in person, and work made or altered to your order (cut to size, flattened, planed or made into furniture), can't be returned unless they're faulty. This doesn't affect your legal rights.</p>
 
     <h2>About natural timber</h2>
-    <p>Every piece is one of a kind and the photos show the actual piece. Wood is a natural material: colour changes over time, and pieces can move or develop small checks as they adjust to a new environment. That's normal and not a fault.</p>
+    <p>The photos show the actual piece you'll get. Wood is a natural material: colour changes over time, and pieces can move or develop small checks as they adjust to a new environment. That's normal and not a fault.</p>
 
     <h2>Your details</h2>
     <p>We only use the details you give us (through the enquiry form, WhatsApp, phone or checkout) to answer you and arrange your order. We don't sell or share them for marketing.</p>
